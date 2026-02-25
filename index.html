@@ -762,12 +762,12 @@ function onTouchEnd(e) {
   document.removeEventListener('touchend',  onTouchEnd);
 
   const t = e.changedTouches[0];
-  clone.style.display = 'none';
 
   clearHighlights();
   drag.el.classList.remove('dragging');
 
   const target = getTarget(t.clientX, t.clientY);
+  clone.style.display = 'none'; // hide AFTER getTarget, not before
   if (target) handleDrop(target);
 
   drag = null;
@@ -778,7 +778,7 @@ function onTouchEnd(e) {
 function getTarget(x, y) {
   clone.style.display = 'none';
   const el = document.elementFromPoint(x, y);
-  clone.style.display = drag ? 'flex' : 'none';
+  clone.style.display = 'flex'; // always restore; onTouchEnd hides it after calling us
   if (!el) return null;
 
   const dz  = el.closest('.drop-zone');
