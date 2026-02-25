@@ -61,78 +61,40 @@
       margin-top: 5px;
     }
 
-    .input-row {
-      display: flex;
+    /* ── Number Grid ────────────────────────── */
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
       gap: 8px;
-      margin-bottom: 16px;
-    }
-    .input-row input {
       flex: 1;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 13px 16px;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--white);
-      outline: none;
-      text-align: center;
-      letter-spacing: 3px;
-    }
-    .input-row input:focus { border-color: var(--green-light); }
-    .input-row input::placeholder {
-      color: var(--gray);
-      letter-spacing: 0;
-      font-size: 14px;
-      font-weight: 400;
-    }
-
-    .btn-add {
-      background: var(--green-field);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 13px 22px;
-      font-size: 22px;
-      font-weight: 700;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .btn-add:active { opacity: 0.75; }
-
-    .player-list {
-      flex: 1;
+      align-content: start;
       overflow-y: auto;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-content: flex-start;
       padding-bottom: 8px;
     }
 
-    .player-chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .num-btn {
+      aspect-ratio: 1;
       background: var(--surface);
       border: 1.5px solid var(--border);
-      border-radius: 20px;
-      padding: 7px 10px 7px 14px;
+      border-radius: 50%;
+      color: var(--gray);
       font-size: 15px;
       font-weight: 700;
-    }
-    .chip-remove {
-      background: none;
-      border: none;
-      color: var(--gray);
-      font-size: 17px;
-      line-height: 1;
       cursor: pointer;
-      padding: 0 2px;
       display: flex;
       align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
     }
-    .chip-remove:active { color: var(--red); }
+
+    .num-btn.selected {
+      background: var(--green-field);
+      border-color: var(--green-field);
+      color: white;
+    }
+
+    .num-btn:active { opacity: 0.75; }
 
     .setup-footer {
       padding: 16px 0 max(20px, env(safe-area-inset-bottom));
@@ -508,23 +470,10 @@
 <div id="setup-screen" class="view active">
   <div class="setup-header">
     <h1>Rec Specs</h1>
-    <p>Add your players for today's game</p>
+    <p id="setup-count">Tap to select your players</p>
   </div>
 
-  <div class="input-row">
-    <input
-      id="jersey-input"
-      type="text"
-      inputmode="numeric"
-      pattern="[0-9]*"
-      maxlength="2"
-      placeholder="Jersey #"
-      autocomplete="off"
-    />
-    <button class="btn-add" id="btn-add">+</button>
-  </div>
-
-  <div class="player-list" id="player-list"></div>
+  <div class="number-grid" id="number-grid"></div>
 
   <div class="setup-footer">
     <button class="btn-start" id="btn-start-game" disabled>Start Game</button>
@@ -639,42 +588,38 @@ const state = {
 // ─────────────────────────────────────────────
 //  SETUP SCREEN
 // ─────────────────────────────────────────────
-const jerseyInput  = document.getElementById('jersey-input');
-const btnAdd       = document.getElementById('btn-add');
-const playerList   = document.getElementById('player-list');
+const setupCount   = document.getElementById('setup-count');
 const btnStartGame = document.getElementById('btn-start-game');
+const numberGrid   = document.getElementById('number-grid');
+
+// Build tap-to-select grid (0–30)
+for (let i = 0; i <= 30; i++) {
+  const btn = document.createElement('button');
+  btn.className   = 'num-btn';
+  btn.dataset.num = String(i);
+  btn.textContent = i;
+  btn.addEventListener('click', () => {
+    const num = btn.dataset.num;
+    if (state.players.includes(num)) {
+      state.players = state.players.filter(p => p !== num);
+    } else {
+      state.players.push(num);
+    }
+    renderSetup();
+  });
+  numberGrid.appendChild(btn);
+}
 
 function renderSetup() {
-  playerList.innerHTML = '';
-  state.players.forEach(num => {
-    const chip = document.createElement('div');
-    chip.className = 'player-chip';
-    chip.innerHTML =
-      `#${num} <button class="chip-remove" data-num="${num}" aria-label="Remove ${num}">×</button>`;
-    playerList.appendChild(chip);
+  numberGrid.querySelectorAll('.num-btn').forEach(btn => {
+    btn.classList.toggle('selected', state.players.includes(btn.dataset.num));
   });
-  btnStartGame.disabled = state.players.length < 1;
+  const n = state.players.length;
+  setupCount.textContent = n === 0
+    ? 'Tap to select your players'
+    : `${n} player${n !== 1 ? 's' : ''} selected`;
+  btnStartGame.disabled = n < 1;
 }
-
-function addPlayer() {
-  const val = jerseyInput.value.trim();
-  if (!val || !/^\d{1,2}$/.test(val)) { jerseyInput.value = ''; return; }
-  if (state.players.includes(val)) { jerseyInput.value = ''; jerseyInput.focus(); return; }
-  state.players.push(val);
-  jerseyInput.value = '';
-  jerseyInput.focus();
-  renderSetup();
-}
-
-btnAdd.addEventListener('click', addPlayer);
-jerseyInput.addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
-
-playerList.addEventListener('click', e => {
-  const btn = e.target.closest('.chip-remove');
-  if (!btn) return;
-  state.players = state.players.filter(p => p !== btn.dataset.num);
-  renderSetup();
-});
 
 btnStartGame.addEventListener('click', () => {
   state.subs = [...state.players];
