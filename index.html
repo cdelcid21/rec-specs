@@ -689,6 +689,13 @@ function tick() {
     const num = state.field[zone];
     if (num !== null) state.playTime[num] = (state.playTime[num] || 0) + 1;
   });
+  // Keep peek display live while held
+  if (peekActive) {
+    document.querySelectorAll('#game-screen .player-token').forEach(token => {
+      if (token.dataset.num && token.dataset.savedText !== undefined)
+        token.textContent = fmtPlayTime(state.playTime[token.dataset.num] || 0);
+    });
+  }
   if (state.timer.elapsed >= HALF) {
     clearInterval(state.timer.interval);
     state.timer.interval = null;
