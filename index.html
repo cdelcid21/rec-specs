@@ -292,6 +292,7 @@
       border-radius: 50%;
       transition: border-color 0.15s, background 0.15s;
     }
+    .drop-zone.occupied .dz-ring { display: none; }
     .drop-zone.drag-over .dz-ring {
       border-color: rgba(255,255,255,0.9);
       background: rgba(255,255,255,0.12);
@@ -307,14 +308,14 @@
       white-space: nowrap;
     }
 
-    /* Zone positions (left%, top%) */
-    #dz-fw1  { left: 20%; top: 16%; }
-    #dz-fw2  { left: 50%; top: 12%; }
-    #dz-fw3  { left: 80%; top: 16%; }
-    #dz-def1 { left: 20%; top: 48%; }
-    #dz-def2 { left: 50%; top: 44%; }
-    #dz-def3 { left: 80%; top: 48%; }
-    #dz-gk   { left: 50%; top: 79%; }
+    /* Zone positions — all in our half (bottom 50% of field) */
+    #dz-fw1  { left: 20%; top: 59%; }
+    #dz-fw2  { left: 50%; top: 56%; }
+    #dz-fw3  { left: 80%; top: 59%; }
+    #dz-def1 { left: 20%; top: 74%; }
+    #dz-def2 { left: 50%; top: 71%; }
+    #dz-def3 { left: 80%; top: 74%; }
+    #dz-gk   { left: 50%; top: 88%; }
 
     /* Player Tokens */
     .player-token {
@@ -686,11 +687,19 @@ function renderGame() {
 
 function renderField() {
   ZONES.forEach(zone => {
-    const dz    = document.getElementById(`dz-${zone}`);
-    const ring  = dz.querySelector('.dz-ring');
-    const num   = state.field[zone];
-    ring.innerHTML = '';
-    if (num !== null) ring.appendChild(makeToken(num, 'on-field', zone));
+    const dz  = document.getElementById(`dz-${zone}`);
+    const num = state.field[zone];
+
+    // Remove existing token (sibling to ring, not inside it)
+    const existing = dz.querySelector('.player-token');
+    if (existing) existing.remove();
+
+    if (num !== null) {
+      dz.classList.add('occupied');
+      dz.appendChild(makeToken(num, 'on-field', zone));
+    } else {
+      dz.classList.remove('occupied');
+    }
   });
 }
 
