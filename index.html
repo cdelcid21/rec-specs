@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+  <title>Rec Specs</title>
+  <style>
+    :root {
+      --bg:           #0f172a;
+      --surface:      #1e293b;
+      --border:       #334155;
+      --green-field:  #16a34a;
+      --green-light:  #22c55e;
+      --orange:       #f97316;
+      --slate:        #475569;
+      --gray:         #94a3b8;
+      --white:        #f1f5f9;
+      --red:          #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--white);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ── Views ─────────────────────────────── */
+    .view { display: none; height: 100dvh; flex-direction: column; }
+    .view.active { display: flex; }
+
+    /* ── Setup Screen ───────────────────────── */
+    #setup-screen { padding: 28px 20px 0; }
+
+    .setup-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .setup-header h1 {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--green-light);
+    }
+    .setup-header p {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 5px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .input-row input {
+      flex: 1;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--white);
+      outline: none;
+      text-align: center;
+      letter-spacing: 3px;
+    }
+    .input-row input:focus { border-color: var(--green-light); }
+    .input-row input::placeholder {
+      color: var(--gray);
+      letter-spacing: 0;
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .btn-add {
+      background: var(--green-field);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 22px;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .btn-add:active { opacity: 0.75; }
+
+    .player-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-content: flex-start;
+      padding-bottom: 8px;
+    }
+
+    .player-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 7px 10px 7px 14px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .chip-remove {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 17px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 2px;
+      display: flex;
+      align-items: center;
+    }
+    .chip-remove:active { color: var(--red); }
+
+    .setup-footer {
+      padding: 16px 0 max(20px, env(safe-area-inset-bottom));
+    }
+    .btn-start {
+      width: 100%;
+      background: var(--green-field);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+    }
+    .btn-start:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-start:not(:disabled):active { opacity: 0.8; }
+
+    /* ── Game Screen ────────────────────────── */
+    #game-screen { overflow: hidden; }
+
+    /* Timer Bar */
+    .timer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 8px;
+      padding-top: max(10px, env(safe-area-inset-top));
+    }
+
+    .timer-display {
+      font-size: 28px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+      min-width: 100px;
+      text-align: center;
+      transition: color 0.3s;
+    }
+    .timer-display.alert { color: var(--red); }
+    .timer-display.small-label { font-size: 17px; letter-spacing: 0.5px; }
+
+    .timer-controls { display: flex; gap: 8px; align-items: center; }
+
+    .btn-timer {
+      background: var(--green-field);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-timer:active { opacity: 0.75; }
+    .btn-timer.secondary {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--gray);
+    }
+    .btn-timer.hidden { visibility: hidden; }
+
+    /* Field Wrapper */
+    .field-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 12px;
+      min-height: 0;
+    }
+
+    /* Soccer Field */
+    #field {
+      position: relative;
+      background: #1e7d35;
+      border-radius: 8px;
+      border: 2.5px solid rgba(255,255,255,0.7);
+      height: 100%;
+      aspect-ratio: 2 / 3;
+      max-width: 100%;
+    }
+
+    /* Field markings */
+    .field-mark {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .line-center {
+      left: 0; right: 0;
+      top: 50%;
+      height: 1.5px;
+      background: rgba(255,255,255,0.5);
+      transform: translateY(-50%);
+    }
+    .circle-center {
+      left: 50%; top: 50%;
+      width: 22%; aspect-ratio: 1;
+      border: 1.5px solid rgba(255,255,255,0.45);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .box-top {
+      left: 50%; top: 0;
+      width: 52%; height: 16%;
+      border: 1.5px solid rgba(255,255,255,0.45);
+      border-top: none;
+      transform: translateX(-50%);
+    }
+    .box-bottom {
+      left: 50%; bottom: 0;
+      width: 52%; height: 16%;
+      border: 1.5px solid rgba(255,255,255,0.45);
+      border-bottom: none;
+      transform: translateX(-50%);
+    }
+    .goal-top {
+      left: 50%; top: 0;
+      width: 26%; height: 5%;
+      border: 1.5px solid rgba(255,255,255,0.55);
+      border-top: none;
+      background: rgba(255,255,255,0.07);
+      transform: translateX(-50%);
+    }
+    .goal-bottom {
+      left: 50%; bottom: 0;
+      width: 26%; height: 5%;
+      border: 1.5px solid rgba(255,255,255,0.55);
+      border-bottom: none;
+      background: rgba(255,255,255,0.07);
+      transform: translateX(-50%);
+    }
+
+    /* Drop Zones */
+    .drop-zone {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dz-ring {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border: 2px dashed rgba(255,255,255,0.35);
+      border-radius: 50%;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop-zone.drag-over .dz-ring {
+      border-color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.12);
+    }
+    .dz-label {
+      position: absolute;
+      top: calc(100% + 3px);
+      font-size: 9px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* Zone positions (left%, top%) */
+    #dz-fw1  { left: 20%; top: 16%; }
+    #dz-fw2  { left: 50%; top: 12%; }
+    #dz-fw3  { left: 80%; top: 16%; }
+    #dz-def1 { left: 20%; top: 48%; }
+    #dz-def2 { left: 50%; top: 44%; }
+    #dz-def3 { left: 80%; top: 48%; }
+    #dz-gk   { left: 50%; top: 79%; }
+
+    /* Player Tokens */
+    .player-token {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      touch-action: none;
+      cursor: grab;
+      position: relative;
+      z-index: 3;
+      flex-shrink: 0;
+    }
+    .player-token.on-field {
+      background: var(--orange);
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+    }
+    .player-token.on-sub {
+      background: var(--slate);
+      color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .player-token.dragging { opacity: 0.25; }
+
+    /* Sub Strip */
+    .sub-strip {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      padding: 10px 14px max(12px, env(safe-area-inset-bottom));
+    }
+    .sub-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gray);
+      letter-spacing: 1.2px;
+      margin-bottom: 8px;
+    }
+    .sub-tokens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 40px;
+      align-items: center;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .sub-tokens.drag-over { background: rgba(255,255,255,0.05); }
+
+    /* Drag Clone */
+    #drag-clone {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%) scale(1.15);
+      display: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    /* ── Confirmation Modal ─────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 26px 22px;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+    }
+    .modal-box h3 {
+      font-size: 19px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .modal-box p {
+      font-size: 15px;
+      color: var(--gray);
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+    .modal-buttons { display: flex; gap: 10px; }
+    .btn-modal {
+      flex: 1;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-modal.yes { background: var(--green-field); color: white; }
+    .btn-modal.no  { background: var(--border); color: var(--gray); }
+    .btn-modal:active { opacity: 0.75; }
+  </style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══════════════════════════ -->
+<div id="setup-screen" class="view active">
+  <div class="setup-header">
+    <h1>Rec Specs</h1>
+    <p>Add your players for today's game</p>
+  </div>
+
+  <div class="input-row">
+    <input
+      id="jersey-input"
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      maxlength="2"
+      placeholder="Jersey #"
+      autocomplete="off"
+    />
+    <button class="btn-add" id="btn-add">+</button>
+  </div>
+
+  <div class="player-list" id="player-list"></div>
+
+  <div class="setup-footer">
+    <button class="btn-start" id="btn-start-game" disabled>Start Game</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ════════════════════════════ -->
+<div id="game-screen" class="view">
+
+  <div class="timer-bar">
+    <div class="timer-display" id="timer-display">00:00</div>
+    <div class="timer-controls">
+      <button class="btn-timer" id="btn-action">Start</button>
+      <button class="btn-timer secondary" id="btn-reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="field-wrapper">
+    <div id="field">
+      <!-- Markings -->
+      <div class="field-mark line-center"></div>
+      <div class="field-mark circle-center"></div>
+      <div class="field-mark box-top"></div>
+      <div class="field-mark box-bottom"></div>
+      <div class="field-mark goal-top"></div>
+      <div class="field-mark goal-bottom"></div>
+
+      <!-- Drop zones -->
+      <div class="drop-zone" id="dz-fw1"  data-zone="fw1">  <div class="dz-ring"></div><span class="dz-label">FWD</span></div>
+      <div class="drop-zone" id="dz-fw2"  data-zone="fw2">  <div class="dz-ring"></div><span class="dz-label">FWD</span></div>
+      <div class="drop-zone" id="dz-fw3"  data-zone="fw3">  <div class="dz-ring"></div><span class="dz-label">FWD</span></div>
+      <div class="drop-zone" id="dz-def1" data-zone="def1"> <div class="dz-ring"></div><span class="dz-label">DEF</span></div>
+      <div class="drop-zone" id="dz-def2" data-zone="def2"> <div class="dz-ring"></div><span class="dz-label">DEF</span></div>
+      <div class="drop-zone" id="dz-def3" data-zone="def3"> <div class="dz-ring"></div><span class="dz-label">DEF</span></div>
+      <div class="drop-zone" id="dz-gk"   data-zone="gk">   <div class="dz-ring"></div><span class="dz-label">GK</span></div>
+    </div>
+  </div>
+
+  <div class="sub-strip">
+    <div class="sub-label">SUBS</div>
+    <div class="sub-tokens" id="sub-tokens"></div>
+  </div>
+
+</div>
+
+<!-- ══ DRAG CLONE ════════════════════════════ -->
+<div id="drag-clone"></div>
+
+<!-- ══ CONFIRMATION MODAL ════════════════════ -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-box">
+    <h3>Make Sub?</h3>
+    <p id="confirm-text"></p>
+    <div class="modal-buttons">
+      <button class="btn-modal yes" id="confirm-yes">Sub In</button>
+      <button class="btn-modal no"  id="confirm-no">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+const ZONES = ['fw1','fw2','fw3','def1','def2','def3','gk'];
+const HALF  = 20 * 60; // 1200 seconds
+
+const state = {
+  players: [],
+  field:   { fw1:null, fw2:null, fw3:null, def1:null, def2:null, def3:null, gk:null },
+  subs:    [],
+  timer: {
+    elapsed:          0,
+    phase:            'idle', // idle | running | paused | halftime | fulltime
+    interval:         null,
+    secondHalfActive: false,
+  },
+  wakeLock: null,
+};
+
+// ─────────────────────────────────────────────
+//  SETUP SCREEN
+// ─────────────────────────────────────────────
+const jerseyInput  = document.getElementById('jersey-input');
+const btnAdd       = document.getElementById('btn-add');
+const playerList   = document.getElementById('player-list');
+const btnStartGame = document.getElementById('btn-start-game');
+
+function renderSetup() {
+  playerList.innerHTML = '';
+  state.players.forEach(num => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerHTML =
+      `#${num} <button class="chip-remove" data-num="${num}" aria-label="Remove ${num}">×</button>`;
+    playerList.appendChild(chip);
+  });
+  btnStartGame.disabled = state.players.length < 1;
+}
+
+function addPlayer() {
+  const val = jerseyInput.value.trim();
+  if (!val || !/^\d{1,2}$/.test(val)) { jerseyInput.value = ''; return; }
+  if (state.players.includes(val)) { jerseyInput.value = ''; jerseyInput.focus(); return; }
+  state.players.push(val);
+  jerseyInput.value = '';
+  jerseyInput.focus();
+  renderSetup();
+}
+
+btnAdd.addEventListener('click', addPlayer);
+jerseyInput.addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
+
+playerList.addEventListener('click', e => {
+  const btn = e.target.closest('.chip-remove');
+  if (!btn) return;
+  state.players = state.players.filter(p => p !== btn.dataset.num);
+  renderSetup();
+});
+
+btnStartGame.addEventListener('click', () => {
+  state.subs = [...state.players];
+  ZONES.forEach(z => state.field[z] = null);
+  document.getElementById('setup-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  renderGame();
+});
+
+// ─────────────────────────────────────────────
+//  TIMER
+// ─────────────────────────────────────────────
+const timerDisplay = document.getElementById('timer-display');
+const btnAction    = document.getElementById('btn-action');
+const btnReset     = document.getElementById('btn-reset');
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function fmt(s) { return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; }
+
+function renderTimer() {
+  const { elapsed, phase } = state.timer;
+  timerDisplay.className = 'timer-display';
+  btnAction.classList.remove('hidden');
+
+  switch (phase) {
+    case 'idle':
+      timerDisplay.textContent = '00:00';
+      btnAction.textContent = 'Start';
+      break;
+    case 'running':
+      timerDisplay.textContent = fmt(elapsed);
+      btnAction.textContent = 'Pause';
+      break;
+    case 'paused':
+      timerDisplay.textContent = fmt(elapsed);
+      btnAction.textContent = 'Resume';
+      break;
+    case 'halftime':
+      timerDisplay.classList.add('alert', 'small-label');
+      timerDisplay.textContent = 'HALF TIME';
+      btnAction.textContent = 'Start 2nd Half';
+      break;
+    case 'fulltime':
+      timerDisplay.classList.add('alert', 'small-label');
+      timerDisplay.textContent = 'FULL TIME';
+      btnAction.classList.add('hidden');
+      break;
+  }
+}
+
+async function acquireWakeLock() {
+  try {
+    if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen');
+  } catch (_) {}
+}
+
+function releaseWakeLock() {
+  if (state.wakeLock) { state.wakeLock.release().catch(() => {}); state.wakeLock = null; }
+}
+
+function tick() {
+  state.timer.elapsed++;
+  if (state.timer.elapsed >= HALF) {
+    clearInterval(state.timer.interval);
+    state.timer.interval = null;
+    releaseWakeLock();
+    state.timer.phase = state.timer.secondHalfActive ? 'fulltime' : 'halftime';
+    if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
+  }
+  renderTimer();
+}
+
+btnAction.addEventListener('click', () => {
+  const { phase } = state.timer;
+  if (phase === 'idle' || phase === 'paused') {
+    state.timer.phase = 'running';
+    state.timer.interval = setInterval(tick, 1000);
+    acquireWakeLock();
+  } else if (phase === 'running') {
+    clearInterval(state.timer.interval);
+    state.timer.interval = null;
+    state.timer.phase = 'paused';
+    releaseWakeLock();
+  } else if (phase === 'halftime') {
+    state.timer.elapsed = 0;
+    state.timer.secondHalfActive = true;
+    state.timer.phase = 'running';
+    state.timer.interval = setInterval(tick, 1000);
+    acquireWakeLock();
+  }
+  renderTimer();
+});
+
+btnReset.addEventListener('click', () => {
+  clearInterval(state.timer.interval);
+  releaseWakeLock();
+  Object.assign(state.timer, { elapsed:0, phase:'idle', interval:null, secondHalfActive:false });
+  renderTimer();
+});
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function renderGame() {
+  renderField();
+  renderSubs();
+  renderTimer();
+}
+
+function renderField() {
+  ZONES.forEach(zone => {
+    const dz    = document.getElementById(`dz-${zone}`);
+    const ring  = dz.querySelector('.dz-ring');
+    const num   = state.field[zone];
+    ring.innerHTML = '';
+    if (num !== null) ring.appendChild(makeToken(num, 'on-field', zone));
+  });
+}
+
+function renderSubs() {
+  const container = document.getElementById('sub-tokens');
+  container.innerHTML = '';
+  state.subs.forEach(num => container.appendChild(makeToken(num, 'on-sub', 'sub')));
+}
+
+function makeToken(num, cls, origin) {
+  const el = document.createElement('div');
+  el.className = `player-token ${cls}`;
+  el.textContent = `#${num}`;
+  el.dataset.num    = num;
+  el.dataset.origin = origin;
+  el.addEventListener('touchstart', onTouchStart, { passive: false });
+  return el;
+}
+
+// ─────────────────────────────────────────────
+//  DRAG AND DROP
+// ─────────────────────────────────────────────
+let drag = null; // { num, origin, el }
+const clone = document.getElementById('drag-clone');
+
+function onTouchStart(e) {
+  e.preventDefault();
+  const t  = e.touches[0];
+  const el = e.currentTarget;
+
+  // Style the floating clone
+  clone.textContent  = el.textContent;
+  clone.style.background  = el.classList.contains('on-field') ? 'var(--orange)' : 'var(--slate)';
+  clone.style.color       = el.classList.contains('on-field') ? 'white' : '#cbd5e1';
+  clone.style.boxShadow   = '0 4px 16px rgba(0,0,0,0.5)';
+  clone.style.left        = t.clientX + 'px';
+  clone.style.top         = t.clientY + 'px';
+  clone.style.display     = 'flex';
+
+  el.classList.add('dragging');
+
+  drag = { num: el.dataset.num, origin: el.dataset.origin, el };
+
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend',  onTouchEnd);
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!drag) return;
+  const t = e.touches[0];
+  clone.style.left = t.clientX + 'px';
+  clone.style.top  = t.clientY + 'px';
+  highlightTarget(t.clientX, t.clientY);
+}
+
+function onTouchEnd(e) {
+  if (!drag) return;
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend',  onTouchEnd);
+
+  const t = e.changedTouches[0];
+  clone.style.display = 'none';
+
+  clearHighlights();
+  drag.el.classList.remove('dragging');
+
+  const target = getTarget(t.clientX, t.clientY);
+  if (target) handleDrop(target);
+
+  drag = null;
+  renderGame();
+}
+
+// Find the drop target under the finger (hide clone first so it doesn't block)
+function getTarget(x, y) {
+  clone.style.display = 'none';
+  const el = document.elementFromPoint(x, y);
+  clone.style.display = drag ? 'flex' : 'none';
+  if (!el) return null;
+
+  const dz  = el.closest('.drop-zone');
+  if (dz) return { type: 'zone', zone: dz.dataset.zone };
+
+  const sub = el.closest('.sub-strip');
+  if (sub) return { type: 'sub' };
+
+  return null;
+}
+
+function highlightTarget(x, y) {
+  clearHighlights();
+  const target = getTarget(x, y);
+  if (!target) return;
+  if (target.type === 'zone') {
+    document.getElementById(`dz-${target.zone}`).classList.add('drag-over');
+  } else {
+    document.getElementById('sub-tokens').classList.add('drag-over');
+  }
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.drop-zone.drag-over').forEach(el => el.classList.remove('drag-over'));
+  document.getElementById('sub-tokens').classList.remove('drag-over');
+}
+
+// ─────────────────────────────────────────────
+//  DROP LOGIC
+// ─────────────────────────────────────────────
+function handleDrop(target) {
+  const { num, origin } = drag;
+
+  if (target.type === 'sub') {
+    if (origin === 'sub') return;             // already a sub
+    state.field[origin] = null;
+    if (!state.subs.includes(num)) state.subs.push(num);
+    return;
+  }
+
+  const zone     = target.zone;
+  const occupant = state.field[zone];
+
+  if (!occupant) {
+    // Empty slot — place directly
+    placeOnField(num, origin, zone);
+  } else if (origin !== 'sub') {
+    // Field → occupied Field — direct swap
+    state.field[origin] = occupant;
+    state.field[zone]   = num;
+  } else {
+    // Sub → occupied Field — needs confirmation
+    pendingSub = { num, occupant, zone };
+    showConfirm(num, occupant);
+  }
+}
+
+function placeOnField(num, origin, zone) {
+  if (origin === 'sub') {
+    state.subs = state.subs.filter(p => p !== num);
+  } else {
+    state.field[origin] = null;
+  }
+  state.field[zone] = num;
+}
+
+// ─────────────────────────────────────────────
+//  CONFIRMATION MODAL
+// ─────────────────────────────────────────────
+let pendingSub = null;
+
+const confirmModal = document.getElementById('confirm-modal');
+const confirmText  = document.getElementById('confirm-text');
+const confirmYes   = document.getElementById('confirm-yes');
+const confirmNo    = document.getElementById('confirm-no');
+
+function showConfirm(inNum, outNum) {
+  confirmText.textContent = `Put #${inNum} in for #${outNum}?`;
+  confirmModal.classList.add('active');
+}
+
+confirmYes.addEventListener('click', () => {
+  confirmModal.classList.remove('active');
+  if (!pendingSub) return;
+  const { num, occupant, zone } = pendingSub;
+  state.subs        = state.subs.filter(p => p !== num);
+  state.field[zone] = num;
+  if (!state.subs.includes(occupant)) state.subs.push(occupant);
+  pendingSub = null;
+  renderGame();
+});
+
+confirmNo.addEventListener('click', () => {
+  confirmModal.classList.remove('active');
+  pendingSub = null;
+});
+</script>
+</body>
+</html>
