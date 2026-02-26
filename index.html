@@ -5,19 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0a0a0a">
   <title>Rec Specs</title>
   <style>
     :root {
-      --bg:           #0f172a;
-      --surface:      #1e293b;
-      --border:       #334155;
-      --green-field:  #16a34a;
-      --green-light:  #22c55e;
-      --orange:       #f97316;
-      --slate:        #475569;
-      --gray:         #94a3b8;
-      --white:        #f1f5f9;
+      --bg:           #0a0a0a;
+      --surface:      #161616;
+      --border:       #2a2a2a;
+      --field-bg:     #0a1f10;
+      --green-field:  #22c55e;
+      --gray:         #6b7280;
+      --white:        #f5f5f5;
       --red:          #ef4444;
     }
 
@@ -176,9 +174,9 @@
     /* Soccer Field */
     #field {
       position: relative;
-      background: #1e7d35;
+      background: var(--field-bg);
       border-radius: 8px;
-      border: 2.5px solid rgba(255,255,255,0.7);
+      border: 2px solid rgba(255,255,255,0.18);
       height: 100%;
       aspect-ratio: 2 / 3;
       max-width: 100%;
@@ -296,14 +294,14 @@
       flex-shrink: 0;
     }
     .player-token.on-field {
-      background: var(--orange);
-      color: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+      background: var(--white);
+      color: #111827;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.6);
     }
     .player-token.on-sub {
-      background: var(--slate);
-      color: #cbd5e1;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      background: #222222;
+      color: var(--gray);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
     .player-token.dragging { opacity: 0.25; }
 
@@ -408,6 +406,7 @@
     /* ── Peek Mode (press-and-hold to see play times) ── */
     .peek-mode .player-token {
       font-size: 10px;
+      background: rgba(10,10,10,0.88) !important;
       color: #fbbf24 !important;
       letter-spacing: 0.5px;
     }
@@ -517,9 +516,9 @@
 
       <!-- SVG overlay: build-out lines + corner arcs -->
       <svg class="field-mark" style="top:0;left:0;width:100%;height:100%;" viewBox="0 0 200 300" preserveAspectRatio="none">
-        <!-- Build-out lines (orange, at 1/3 and 2/3 field length) -->
-        <line x1="0" y1="100" x2="200" y2="100" stroke="#f97316" stroke-width="2" stroke-opacity="0.85"/>
-        <line x1="0" y1="200" x2="200" y2="200" stroke="#f97316" stroke-width="2" stroke-opacity="0.85"/>
+        <!-- Build-out lines (white dashed, at 1/3 and 2/3 field length) -->
+        <line x1="0" y1="100" x2="200" y2="100" stroke="white" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="6 4"/>
+        <line x1="0" y1="200" x2="200" y2="200" stroke="white" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="6 4"/>
         <!-- Corner arcs (quarter circles, radius = 10 units) -->
         <path d="M 10 0 A 10 10 0 0 1 0 10"        fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
         <path d="M 190 0 A 10 10 0 0 0 200 10"    fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
@@ -800,8 +799,8 @@ function onTouchStart(e) {
 
   // Style the floating clone
   clone.textContent  = el.textContent;
-  clone.style.background  = el.classList.contains('on-field') ? 'var(--orange)' : 'var(--slate)';
-  clone.style.color       = el.classList.contains('on-field') ? 'white' : '#cbd5e1';
+  clone.style.background  = el.classList.contains('on-field') ? '#f5f5f5' : '#222222';
+  clone.style.color       = el.classList.contains('on-field') ? '#111827' : '#6b7280';
   clone.style.boxShadow   = '0 4px 16px rgba(0,0,0,0.5)';
   clone.style.left        = t.clientX + 'px';
   clone.style.top         = t.clientY + 'px';
