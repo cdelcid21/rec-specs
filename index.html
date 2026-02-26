@@ -468,6 +468,96 @@
     .btn-modal.yes { background: var(--green-field); color: white; }
     .btn-modal.no  { background: var(--border); color: var(--gray); }
     .btn-modal:active { opacity: 0.75; }
+
+    /* ── Halftime / Fulltime Report ─────────── */
+    .report-box {
+      max-height: 78dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 22px 20px 20px;
+      text-align: left;
+    }
+    .report-title {
+      color: var(--red);
+      font-size: 18px;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
+    }
+    .report-legend {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .report-legend span {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .report-legend span::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .leg-fw::before  { background: #38bdf8; }
+    .leg-def::before { background: #a78bfa; }
+    .leg-gk::before  { background: #fbbf24; }
+    .leg-fw  { color: #38bdf8; }
+    .leg-def { color: #a78bfa; }
+    .leg-gk  { color: #fbbf24; }
+
+    .report-list { flex: 1; overflow-y: auto; }
+
+    .report-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .report-row:last-child { border-bottom: none; }
+
+    .report-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .report-row.fresh    .report-dot { background: #22c55e; }
+    .report-row.moderate .report-dot { background: transparent; }
+    .report-row.heavy    .report-dot { background: #ef4444; }
+
+    .report-num {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--white);
+      min-width: 32px;
+    }
+    .report-time {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray);
+      min-width: 36px;
+      font-variant-numeric: tabular-nums;
+    }
+    .report-bar-outer {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+    }
+    .bar-fw  { background: #38bdf8; height: 100%; flex-shrink: 0; }
+    .bar-def { background: #a78bfa; height: 100%; flex-shrink: 0; }
+    .bar-gk  { background: #fbbf24; height: 100%; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -562,6 +652,22 @@
   </div>
 </div>
 
+<!-- ══ HALFTIME / FULLTIME REPORT ════════════ -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal-box report-box">
+    <h3 id="report-title" class="report-title"></h3>
+    <div class="report-legend">
+      <span class="leg-fw">FWD</span>
+      <span class="leg-def">DEF</span>
+      <span class="leg-gk">GK</span>
+    </div>
+    <div class="report-list" id="report-list"></div>
+    <div class="modal-buttons" style="margin-top:18px">
+      <button class="btn-modal no" id="report-close">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─────────────────────────────────────────────
 //  STATE
@@ -589,6 +695,7 @@ const state = {
   drawMode: false,
   wakeLock: null,
   playTime: {}, // { jerseyNum: seconds } — cumulative on-field time per player
+  posTime:  {}, // { jerseyNum: { fw:0, def:0, gk:0 } } — time by position group
 };
 
 // ─────────────────────────────────────────────
@@ -631,7 +738,11 @@ btnStartGame.addEventListener('click', () => {
   state.subs = [...state.players];
   ZONES.forEach(z => state.field[z] = null);
   state.playTime = {};
-  state.players.forEach(num => state.playTime[num] = 0);
+  state.posTime  = {};
+  state.players.forEach(num => {
+    state.playTime[num] = 0;
+    state.posTime[num]  = { fw:0, def:0, gk:0 };
+  });
   document.getElementById('setup-screen').classList.remove('active');
   document.getElementById('game-screen').classList.add('active');
   renderGame();
@@ -690,10 +801,15 @@ function releaseWakeLock() {
 
 function tick() {
   state.timer.elapsed++;
-  // Accumulate play time for all currently on-field players
+  // Accumulate play time + position time for all currently on-field players
   ZONES.forEach(zone => {
     const num = state.field[zone];
-    if (num !== null) state.playTime[num] = (state.playTime[num] || 0) + 1;
+    if (num !== null) {
+      state.playTime[num] = (state.playTime[num] || 0) + 1;
+      if (!state.posTime[num]) state.posTime[num] = { fw:0, def:0, gk:0 };
+      const pos = zone.startsWith('fw') ? 'fw' : zone.startsWith('def') ? 'def' : 'gk';
+      state.posTime[num][pos]++;
+    }
   });
   // Keep peek display live while held
   if (peekActive) {
@@ -709,6 +825,7 @@ function tick() {
     releaseWakeLock();
     state.timer.phase = state.timer.secondHalfActive ? 'fulltime' : 'halftime';
     if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
+    setTimeout(() => showReport(state.timer.phase), 350);
   }
   renderTimer();
 }
@@ -738,7 +855,10 @@ btnReset.addEventListener('click', () => {
   clearInterval(state.timer.interval);
   releaseWakeLock();
   Object.assign(state.timer, { elapsed:0, phase:'idle', interval:null, secondHalfActive:false });
-  state.players.forEach(num => state.playTime[num] = 0);
+  state.players.forEach(num => {
+    state.playTime[num] = 0;
+    state.posTime[num]  = { fw:0, def:0, gk:0 };
+  });
   renderTimer();
 });
 
@@ -1172,6 +1292,56 @@ gameScreen.addEventListener('touchend', () => {
   if (peekTimer) { clearTimeout(peekTimer); peekTimer = null; }
   exitPeek();
 });
+
+// ─────────────────────────────────────────────
+//  HALFTIME / FULLTIME REPORT
+// ─────────────────────────────────────────────
+const reportModal = document.getElementById('report-modal');
+
+document.getElementById('report-close').addEventListener('click', () => {
+  reportModal.classList.remove('active');
+});
+
+function showReport(phase) {
+  const maxTime = phase === 'fulltime' ? HALF * 2 : HALF;
+
+  document.getElementById('report-title').textContent =
+    phase === 'halftime' ? 'HALF TIME' : 'FULL TIME';
+
+  const sorted = [...state.players].sort(
+    (a, b) => (state.playTime[a] || 0) - (state.playTime[b] || 0)
+  );
+
+  const list = document.getElementById('report-list');
+  list.innerHTML = '';
+
+  sorted.forEach(num => {
+    const total = state.playTime[num] || 0;
+    const pos   = state.posTime[num]  || { fw:0, def:0, gk:0 };
+    const pct   = total / maxTime;
+
+    const statusClass = pct >= 0.7 ? 'heavy' : pct >= 0.4 ? 'moderate' : 'fresh';
+
+    const fwW  = (pos.fw  / maxTime * 100).toFixed(1);
+    const defW = (pos.def / maxTime * 100).toFixed(1);
+    const gkW  = (pos.gk  / maxTime * 100).toFixed(1);
+
+    const row = document.createElement('div');
+    row.className = `report-row ${statusClass}`;
+    row.innerHTML = `
+      <div class="report-dot"></div>
+      <div class="report-num">#${num}</div>
+      <div class="report-time">${fmtPlayTime(total)}</div>
+      <div class="report-bar-outer">
+        <div class="bar-fw"  style="width:${fwW}%"></div>
+        <div class="bar-def" style="width:${defW}%"></div>
+        <div class="bar-gk"  style="width:${gkW}%"></div>
+      </div>`;
+    list.appendChild(row);
+  });
+
+  reportModal.classList.add('active');
+}
 </script>
 </body>
 </html>
