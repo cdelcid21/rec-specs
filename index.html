@@ -118,14 +118,18 @@
     /* Timer Bar */
     .timer-bar {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
+      flex-direction: column;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      padding: max(10px, env(safe-area-inset-top)) 16px 12px;
       gap: 8px;
-      padding-top: max(10px, env(safe-area-inset-top));
+    }
+    .timer-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
 
     .timer-display {
@@ -133,33 +137,63 @@
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       letter-spacing: 1px;
-      min-width: 100px;
       text-align: center;
       transition: color 0.3s;
     }
     .timer-display.alert { color: var(--red); }
     .timer-display.small-label { font-size: 17px; letter-spacing: 0.5px; }
 
-    .timer-controls { display: flex; gap: 8px; align-items: center; }
-
-    .btn-timer {
+    .timer-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .btn-ctrl-play {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
       background: var(--green-field);
       color: white;
       border: none;
-      border-radius: 10px;
-      padding: 9px 16px;
-      font-size: 14px;
+      font-size: 20px;
       font-weight: 700;
       cursor: pointer;
-      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .btn-timer:active { opacity: 0.75; }
-    .btn-timer.secondary {
+    .btn-ctrl-play:active { opacity: 0.75; }
+    .btn-ctrl-skip {
       background: transparent;
       border: 1.5px solid var(--border);
+      border-radius: 12px;
       color: var(--gray);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      cursor: pointer;
+      min-width: 60px;
     }
-    .btn-timer.hidden { visibility: hidden; }
+    .btn-ctrl-skip:active:not(:disabled) { opacity: 0.75; }
+    .btn-ctrl-skip:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-ctrl-draw {
+      position: absolute;
+      right: 0;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--gray);
+      font-size: 16px;
+      padding: 6px 10px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .btn-ctrl-draw:active { opacity: 0.75; }
+    .btn-ctrl-draw.active {
+      border-color: rgba(250,204,21,0.7);
+      color: rgba(250,204,21,0.9);
+    }
 
     /* Field Wrapper */
     .field-wrapper {
@@ -379,12 +413,6 @@
     /* Field border highlight in draw mode */
     .draw-mode-active #field { border-color: rgba(250,204,21,0.8); }
 
-    /* Draw toggle button active state */
-    .btn-draw.active {
-      border-color: rgba(250,204,21,0.7);
-      color: rgba(250,204,21,0.9);
-    }
-
     /* Hide zone UI in draw mode — replaced by free draw-tokens */
     .draw-mode-active .dz-ring,
     .draw-mode-active .dz-label,
@@ -580,11 +608,14 @@
 <div id="game-screen" class="view">
 
   <div class="timer-bar">
-    <div class="timer-display" id="timer-display">00:00</div>
+    <div class="timer-top">
+      <div class="timer-display" id="timer-display">00:00</div>
+      <button class="btn-ctrl-draw" id="btn-draw">&#9998;</button>
+    </div>
     <div class="timer-controls">
-      <button class="btn-timer" id="btn-action">Start</button>
-      <button class="btn-timer secondary" id="btn-reset">Reset</button>
-      <button class="btn-timer secondary btn-draw" id="btn-draw">&#9998;</button>
+      <button class="btn-ctrl-skip" id="btn-skip-back" disabled>−30s</button>
+      <button class="btn-ctrl-play" id="btn-action">&#9654;</button>
+      <button class="btn-ctrl-skip" id="btn-skip-fwd" disabled>+30s</button>
     </div>
   </div>
 
@@ -753,7 +784,8 @@ btnStartGame.addEventListener('click', () => {
 // ─────────────────────────────────────────────
 const timerDisplay = document.getElementById('timer-display');
 const btnAction    = document.getElementById('btn-action');
-const btnReset     = document.getElementById('btn-reset');
+const btnSkipBack  = document.getElementById('btn-skip-back');
+const btnSkipFwd   = document.getElementById('btn-skip-fwd');
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function fmt(s) { return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; }
@@ -761,30 +793,34 @@ function fmt(s) { return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; }
 function renderTimer() {
   const { elapsed, phase } = state.timer;
   timerDisplay.className = 'timer-display';
-  btnAction.classList.remove('hidden');
+
+  const skipsEnabled = (phase === 'running' || phase === 'paused');
+  btnSkipBack.disabled = !skipsEnabled;
+  btnSkipFwd.disabled  = !skipsEnabled;
+  btnAction.style.display = '';
 
   switch (phase) {
     case 'idle':
       timerDisplay.textContent = '00:00';
-      btnAction.textContent = 'Start';
+      btnAction.textContent = '▶';
       break;
     case 'running':
       timerDisplay.textContent = fmt(elapsed);
-      btnAction.textContent = 'Pause';
+      btnAction.textContent = '⏸';
       break;
     case 'paused':
       timerDisplay.textContent = fmt(elapsed);
-      btnAction.textContent = 'Resume';
+      btnAction.textContent = '▶';
       break;
     case 'halftime':
       timerDisplay.classList.add('alert', 'small-label');
-      timerDisplay.textContent = 'HALF TIME';
-      btnAction.textContent = 'Start 2nd Half';
+      timerDisplay.textContent = 'HALF';
+      btnAction.textContent = '2H';
       break;
     case 'fulltime':
       timerDisplay.classList.add('alert', 'small-label');
-      timerDisplay.textContent = 'FULL TIME';
-      btnAction.classList.add('hidden');
+      timerDisplay.textContent = 'FULL';
+      btnAction.style.display = 'none';
       break;
   }
 }
@@ -851,7 +887,7 @@ btnAction.addEventListener('click', () => {
   renderTimer();
 });
 
-btnReset.addEventListener('click', () => {
+function doReset() {
   clearInterval(state.timer.interval);
   releaseWakeLock();
   Object.assign(state.timer, { elapsed:0, phase:'idle', interval:null, secondHalfActive:false });
@@ -860,6 +896,45 @@ btnReset.addEventListener('click', () => {
     state.posTime[num]  = { fw:0, def:0, gk:0 };
   });
   renderTimer();
+}
+
+// +30s skip forward
+btnSkipFwd.addEventListener('click', () => {
+  const { phase } = state.timer;
+  if (phase !== 'running' && phase !== 'paused') return;
+  state.timer.elapsed = Math.min(HALF - 1, state.timer.elapsed + 30);
+  renderTimer();
+});
+
+// −30s tap = skip back 30s; long-hold 600ms = full reset
+let skipHoldTimer = null;
+let skipHoldFired = false;
+
+btnSkipBack.addEventListener('touchstart', e => {
+  e.preventDefault();
+  skipHoldFired = false;
+  skipHoldTimer = setTimeout(() => {
+    skipHoldFired = true;
+    doReset();
+  }, 600);
+}, { passive: false });
+
+btnSkipBack.addEventListener('touchend', () => {
+  clearTimeout(skipHoldTimer);
+  skipHoldTimer = null;
+  if (!skipHoldFired) {
+    const { phase } = state.timer;
+    if (phase !== 'running' && phase !== 'paused') return;
+    state.timer.elapsed = Math.max(0, state.timer.elapsed - 30);
+    renderTimer();
+  }
+  skipHoldFired = false;
+});
+
+btnSkipBack.addEventListener('touchcancel', () => {
+  clearTimeout(skipHoldTimer);
+  skipHoldTimer = null;
+  skipHoldFired = false;
 });
 
 // ─────────────────────────────────────────────
