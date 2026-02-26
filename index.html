@@ -415,6 +415,13 @@
       opacity: 0.5;
       transition: opacity 0.15s;
     }
+    /* Sub recommendations — rings visible only during peek */
+    .peek-mode .player-token.sub-out-hint {
+      box-shadow: 0 0 0 3px #ef4444;
+    }
+    .peek-mode .player-token.sub-in-hint {
+      box-shadow: 0 0 0 3px #22c55e;
+    }
 
     /* ── Confirmation Modal ─────────────────── */
     .modal-overlay {
@@ -695,6 +702,7 @@ function tick() {
       if (token.dataset.num && token.dataset.savedText !== undefined)
         token.textContent = fmtPlayTime(state.playTime[token.dataset.num] || 0);
     });
+    applySubHints();
   }
   if (state.timer.elapsed >= HALF) {
     clearInterval(state.timer.interval);
@@ -1087,6 +1095,40 @@ function fmtPlayTime(secs) {
   return `${Math.floor(secs / 60)}:${pad(secs % 60)}`;
 }
 
+// Highlight which field players to sub out (red) and bench players to sub in (green).
+// N = bench count → flag the N longest-on field players (FWDs prioritized on ties).
+function applySubHints() {
+  const tokens = document.querySelectorAll('#game-screen .player-token');
+  tokens.forEach(t => t.classList.remove('sub-out-hint', 'sub-in-hint'));
+
+  const benchCount = state.subs.length;
+  if (benchCount === 0) return;
+
+  // Build ranked list of field candidates (GK excluded)
+  const candidates = ZONES
+    .filter(zone => zone !== 'gk' && state.field[zone] !== null)
+    .map(zone => ({
+      num:   state.field[zone],
+      time:  state.playTime[state.field[zone]] || 0,
+      isFwd: zone.startsWith('fw'),
+    }))
+    .sort((a, b) => {
+      if (b.time !== a.time) return b.time - a.time;       // most time first
+      return a.isFwd === b.isFwd ? 0 : a.isFwd ? -1 : 1;  // FWDs before DEFs on tie
+    });
+
+  const subOutNums = new Set(
+    candidates.slice(0, Math.min(benchCount, candidates.length)).map(c => c.num)
+  );
+
+  tokens.forEach(token => {
+    const num = token.dataset.num;
+    if (!num) return;
+    if (subOutNums.has(num))          token.classList.add('sub-out-hint');
+    else if (state.subs.includes(num)) token.classList.add('sub-in-hint');
+  });
+}
+
 function enterPeek() {
   if (drag) return; // drag won the race — skip peek
   peekActive = true;
@@ -1097,6 +1139,7 @@ function enterPeek() {
     token.dataset.savedText = token.textContent;
     token.textContent = fmtPlayTime(state.playTime[num] || 0);
   });
+  applySubHints();
 }
 
 function exitPeek() {
@@ -1104,6 +1147,7 @@ function exitPeek() {
   peekActive = false;
   gameScreen.classList.remove('peek-mode');
   document.querySelectorAll('#game-screen .player-token').forEach(token => {
+    token.classList.remove('sub-out-hint', 'sub-in-hint');
     if (token.dataset.savedText !== undefined) {
       token.textContent = token.dataset.savedText;
       delete token.dataset.savedText;
