@@ -1350,7 +1350,7 @@ function exitPeek() {
 }
 
 gameScreen.addEventListener('touchstart', e => {
-  if (drag) return;
+  if (drag || state.drawMode) return;
   peekStartX = e.touches[0].clientX;
   peekStartY = e.touches[0].clientY;
   peekTimer = setTimeout(() => { peekTimer = null; enterPeek(); }, 400);
