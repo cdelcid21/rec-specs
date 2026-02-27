@@ -1328,7 +1328,7 @@ function applySubHints() {
     });
 
   const subOutNums = new Set(
-    candidates.slice(0, Math.min(benchCount, candidates.length)).map(c => c.num)
+    candidates.slice(0, Math.min(benchCount, candidates.length, 3)).map(c => c.num)
   );
 
   tokens.forEach(token => {
