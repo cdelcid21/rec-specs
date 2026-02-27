@@ -6,6 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0a0a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>Rec Specs</title>
   <style>
     :root {
@@ -1392,6 +1394,13 @@ const reportModal = document.getElementById('report-modal');
 document.getElementById('report-close').addEventListener('click', () => {
   reportModal.classList.remove('active');
 });
+
+// ─────────────────────────────────────────────
+//  SERVICE WORKER
+// ─────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
 
 function showReport(phase) {
   const maxTime = phase === 'fulltime' ? HALF * 2 : HALF;
