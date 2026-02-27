@@ -898,11 +898,25 @@ function doReset() {
   renderTimer();
 }
 
+// Adjust play/position time for all on-field players by delta seconds
+function adjustPlayerTimes(delta) {
+  ZONES.forEach(zone => {
+    const num = state.field[zone];
+    if (num === null) return;
+    state.playTime[num] = Math.max(0, (state.playTime[num] || 0) + delta);
+    if (!state.posTime[num]) state.posTime[num] = { fw:0, def:0, gk:0 };
+    const pos = zone.startsWith('fw') ? 'fw' : zone.startsWith('def') ? 'def' : 'gk';
+    state.posTime[num][pos] = Math.max(0, (state.posTime[num][pos] || 0) + delta);
+  });
+}
+
 // +30s skip forward
 btnSkipFwd.addEventListener('click', () => {
   const { phase } = state.timer;
   if (phase !== 'running' && phase !== 'paused') return;
-  state.timer.elapsed = Math.min(HALF - 1, state.timer.elapsed + 30);
+  const prev = state.timer.elapsed;
+  state.timer.elapsed = Math.min(HALF - 1, prev + 30);
+  adjustPlayerTimes(state.timer.elapsed - prev);
   renderTimer();
 });
 
@@ -925,7 +939,9 @@ btnSkipBack.addEventListener('touchend', () => {
   if (!skipHoldFired) {
     const { phase } = state.timer;
     if (phase !== 'running' && phase !== 'paused') return;
-    state.timer.elapsed = Math.max(0, state.timer.elapsed - 30);
+    const prev = state.timer.elapsed;
+    state.timer.elapsed = Math.max(0, prev - 30);
+    adjustPlayerTimes(state.timer.elapsed - prev);
     renderTimer();
   }
   skipHoldFired = false;
