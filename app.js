@@ -22,6 +22,7 @@ const HEAVY_PLAY_RATIO   = 0.70;  // play-time fraction at or above which a play
 const MODERATE_PLAY_RATIO= 0.40;  // play-time fraction at or above which a player is "moderate"
 const FREE_DRAG_MIN_PCT  = 3;     // lower clamp (%) for free-drag token position in draw mode
 const FREE_DRAG_MAX_PCT  = 97;    // upper clamp (%) for free-drag token position in draw mode
+const STORAGE_KEY        = 'rec-specs-state'; // localStorage key for session persistence
 
 const state = {
   players: [],
@@ -176,6 +177,7 @@ function tick() {
     setTimeout(() => showReport(state.timer.phase), REPORT_DELAY_MS);
   }
   renderTimer();
+  saveState();
 }
 
 btnAction.addEventListener('click', () => {
@@ -197,6 +199,7 @@ btnAction.addEventListener('click', () => {
     acquireWakeLock();
   }
   renderTimer();
+  saveState();
 });
 
 function doReset() {
@@ -207,6 +210,7 @@ function doReset() {
     state.playTime[num] = 0;
     state.posTime[num]  = { fw:0, def:0, gk:0 };
   });
+  clearSavedState();
   renderTimer();
 }
 
@@ -230,6 +234,7 @@ btnSkipFwd.addEventListener('click', () => {
   state.timer.elapsed = Math.min(HALF - 1, prev + SKIP_DELTA_SECS);
   adjustPlayerTimes(state.timer.elapsed - prev);
   renderTimer();
+  saveState();
 });
 
 // −30s tap = skip back 30s; long-hold 600ms = full reset
@@ -255,6 +260,7 @@ btnSkipBack.addEventListener('touchend', () => {
     state.timer.elapsed = Math.max(0, prev - SKIP_DELTA_SECS);
     adjustPlayerTimes(state.timer.elapsed - prev);
     renderTimer();
+    saveState();
   }
   skipHoldFired = false;
 });
@@ -272,6 +278,7 @@ function renderGame() {
   renderField();
   renderSubs();
   renderTimer();
+  saveState();
 }
 
 function renderField() {
@@ -706,6 +713,50 @@ document.getElementById('report-close').addEventListener('click', () => {
 });
 
 // ─────────────────────────────────────────────
+//  PERSISTENCE
+// ─────────────────────────────────────────────
+function saveState() {
+  const { players, field, subs, timer, playTime, posTime } = state;
+  const { elapsed, phase, secondHalfActive } = timer;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      players, field, subs,
+      timer: { elapsed, phase, secondHalfActive },
+      playTime, posTime,
+    }));
+  } catch (_) {}
+}
+
+function clearSavedState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+}
+
+function restoreState() {
+  let saved;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    saved = JSON.parse(raw);
+  } catch (_) { return false; }
+
+  if (!saved.players || !saved.players.length) return false;
+
+  state.players  = saved.players;
+  Object.assign(state.field, saved.field || {});
+  state.subs     = saved.subs     || [];
+  state.playTime = saved.playTime || {};
+  state.posTime  = saved.posTime  || {};
+
+  const t = saved.timer || {};
+  state.timer.elapsed          = t.elapsed          || 0;
+  state.timer.secondHalfActive = t.secondHalfActive || false;
+  // If the timer was running when the page closed, restore as paused
+  state.timer.phase = t.phase === 'running' ? 'paused' : (t.phase || 'idle');
+
+  return true;
+}
+
+// ─────────────────────────────────────────────
 //  SERVICE WORKER
 // ─────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
@@ -751,4 +802,13 @@ function showReport(phase) {
   });
 
   reportModal.classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+//  STARTUP — restore previous session if saved
+// ─────────────────────────────────────────────
+if (restoreState()) {
+  document.getElementById('setup-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  renderGame();
 }
