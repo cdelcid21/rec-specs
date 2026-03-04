@@ -191,16 +191,15 @@ function renderSeasonTab() {
     });
   });
 
-  const totalMaxTime = season.length * HALF * 2; // max possible seconds
-
   // Sort most → least time
   const sorted = Object.entries(totals).sort((a, b) => b[1].time - a[1].time);
 
   el.innerHTML = `<div class="season-games-count">${season.length} game${season.length !== 1 ? 's' : ''} played</div>`;
   sorted.forEach(([num, data]) => {
-    const fwW  = (data.fw  / totalMaxTime * 100).toFixed(1);
-    const defW = (data.def / totalMaxTime * 100).toFixed(1);
-    const gkW  = (data.gk  / totalMaxTime * 100).toFixed(1);
+    const playerMaxTime = data.games * HALF * 2; // max possible for games this player was in
+    const fwW  = (data.fw  / playerMaxTime * 100).toFixed(1);
+    const defW = (data.def / playerMaxTime * 100).toFixed(1);
+    const gkW  = (data.gk  / playerMaxTime * 100).toFixed(1);
     const row  = document.createElement('div');
     row.className = 'report-row';
     row.innerHTML = `
