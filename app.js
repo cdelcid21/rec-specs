@@ -24,8 +24,10 @@ const FREE_DRAG_MIN_PCT  = 3;     // lower clamp (%) for free-drag token positio
 const FREE_DRAG_MAX_PCT  = 97;    // upper clamp (%) for free-drag token position in draw mode
 const STORAGE_KEY        = 'rec-specs-state'; // localStorage key for session persistence
 const ROSTER_KEY         = 'rec-specs-roster';
+const SEASON_KEY         = 'rec-specs-season';
 
 let roster = []; // persistent player list: [{ num, name }]
+let season = [];
 
 function saveRoster() {
   try { localStorage.setItem(ROSTER_KEY, JSON.stringify(roster)); } catch (_) {}
@@ -36,6 +38,25 @@ function loadRoster() {
     if (raw) roster = JSON.parse(raw);
   } catch (_) {}
 }
+
+function loadSeason() {
+  try {
+    const raw = localStorage.getItem(SEASON_KEY);
+    if (raw) season = JSON.parse(raw);
+  } catch (_) {}
+}
+
+function saveSeasonGame() {
+  season.push({
+    players:  [...state.players],
+    playTime: { ...state.playTime },
+    posTime:  Object.fromEntries(
+      state.players.map(n => [n, { ...(state.posTime[n] || { fw:0, def:0, gk:0 }) }])
+    ),
+  });
+  try { localStorage.setItem(SEASON_KEY, JSON.stringify(season)); } catch (_) {}
+}
+
 // Return display name for a jersey number (falls back to #num if not on roster)
 function playerName(num) {
   const p = roster.find(p => p.num === num);
@@ -127,6 +148,95 @@ btnAddPlayer.addEventListener('click', () => {
 // Allow pressing Enter in either input to add the player
 [addNameEl, addNumEl].forEach(el => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter') btnAddPlayer.click(); });
+});
+
+const tabRoster   = document.getElementById('tab-roster');
+const tabSeason   = document.getElementById('tab-season');
+const panelRoster = document.getElementById('panel-roster');
+const panelSeason = document.getElementById('panel-season');
+
+tabRoster.addEventListener('click', () => {
+  tabRoster.classList.add('active');
+  tabSeason.classList.remove('active');
+  panelRoster.style.display = '';
+  panelSeason.style.display = 'none';
+});
+
+tabSeason.addEventListener('click', () => {
+  tabSeason.classList.add('active');
+  tabRoster.classList.remove('active');
+  panelRoster.style.display = 'none';
+  panelSeason.style.display = '';
+  renderSeasonTab();
+});
+
+function renderSeasonTab() {
+  const el = document.getElementById('season-stats');
+  if (season.length === 0) {
+    el.innerHTML = '<p class="season-empty">No games recorded yet</p>';
+    return;
+  }
+
+  // Aggregate play time + position time per player across all games
+  const totals = {};
+  season.forEach(game => {
+    game.players.forEach(num => {
+      if (!totals[num]) totals[num] = { time:0, fw:0, def:0, gk:0, games:0 };
+      totals[num].time  += game.playTime[num] || 0;
+      const pt = game.posTime[num] || {};
+      totals[num].fw   += pt.fw  || 0;
+      totals[num].def  += pt.def || 0;
+      totals[num].gk   += pt.gk  || 0;
+      totals[num].games++;
+    });
+  });
+
+  const totalMaxTime = season.length * HALF * 2; // max possible seconds
+
+  // Sort most → least time
+  const sorted = Object.entries(totals).sort((a, b) => b[1].time - a[1].time);
+
+  el.innerHTML = `<div class="season-games-count">${season.length} game${season.length !== 1 ? 's' : ''} played</div>`;
+  sorted.forEach(([num, data]) => {
+    const fwW  = (data.fw  / totalMaxTime * 100).toFixed(1);
+    const defW = (data.def / totalMaxTime * 100).toFixed(1);
+    const gkW  = (data.gk  / totalMaxTime * 100).toFixed(1);
+    const row  = document.createElement('div');
+    row.className = 'report-row';
+    row.innerHTML = `
+      <div class="report-name">${playerName(num)}</div>
+      <div class="report-jersey">#${num}</div>
+      <div class="report-time">${fmtPlayTime(data.time)}</div>
+      <div class="report-bar-outer">
+        <div class="bar-fw"  style="width:${fwW}%"></div>
+        <div class="bar-def" style="width:${defW}%"></div>
+        <div class="bar-gk"  style="width:${gkW}%"></div>
+      </div>`;
+    el.appendChild(row);
+  });
+}
+
+// Clear season — two-tap confirmation
+let clearSeasonPending = false;
+let clearSeasonTimer   = null;
+const btnClearSeason = document.getElementById('btn-clear-season');
+
+btnClearSeason.addEventListener('click', () => {
+  if (clearSeasonPending) {
+    clearTimeout(clearSeasonTimer);
+    clearSeasonPending = false;
+    btnClearSeason.textContent = 'Clear Season';
+    season = [];
+    try { localStorage.removeItem(SEASON_KEY); } catch (_) {}
+    renderSeasonTab();
+  } else {
+    clearSeasonPending = true;
+    btnClearSeason.textContent = 'Tap again to confirm';
+    clearSeasonTimer = setTimeout(() => {
+      clearSeasonPending = false;
+      btnClearSeason.textContent = 'Clear Season';
+    }, 3000);
+  }
 });
 
 btnStartGame.addEventListener('click', () => {
@@ -817,6 +927,7 @@ if ('serviceWorker' in navigator) {
 }
 
 function showReport(phase) {
+  if (phase === 'fulltime') saveSeasonGame();
   const maxTime = phase === 'fulltime' ? HALF * 2 : HALF;
 
   document.getElementById('report-title').textContent =
@@ -862,6 +973,7 @@ function showReport(phase) {
 //  STARTUP — restore previous session if saved
 // ─────────────────────────────────────────────
 loadRoster();       // load roster first
+loadSeason();       // load season data
 renderSetup();      // draw setup screen (empty roster or saved one)
 if (restoreState()) {
   document.getElementById('setup-screen').classList.remove('active');
