@@ -337,6 +337,7 @@ function tick() {
     state.timer.interval = null;
     releaseWakeLock();
     state.timer.phase = state.timer.secondHalfActive ? 'fulltime' : 'halftime';
+    if (state.timer.phase === 'fulltime') saveSeasonGame();
     if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
     setTimeout(() => showReport(state.timer.phase), REPORT_DELAY_MS);
   }
@@ -946,7 +947,6 @@ if ('serviceWorker' in navigator) {
 }
 
 function showReport(phase) {
-  if (phase === 'fulltime') saveSeasonGame();
   const maxTime = phase === 'fulltime' ? HALF * 2 : HALF;
 
   document.getElementById('report-title').textContent =
