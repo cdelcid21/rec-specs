@@ -260,6 +260,7 @@ const halfBadge    = document.getElementById('half-badge');
 const btnAction    = document.getElementById('btn-action');
 const btnSkipBack  = document.getElementById('btn-skip-back');
 const btnSkipFwd   = document.getElementById('btn-skip-fwd');
+const btnBackSetup = document.getElementById('btn-back-setup');
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function fmt(s) { return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; }
@@ -273,6 +274,7 @@ function renderTimer() {
   btnSkipFwd.disabled  = !skipsEnabled;
   btnAction.style.display = '';
   halfBadge.textContent = phase === 'idle' ? '' : (state.timer.secondHalfActive ? '2H' : '1H');
+  btnBackSetup.style.display = phase === 'idle' ? '' : 'none';
 
   switch (phase) {
     case 'idle':
@@ -375,6 +377,20 @@ function doReset() {
   clearSavedState();
   renderTimer();
 }
+
+function goBackToSetup() {
+  clearSavedState();
+  // Ensure Roster tab is active when returning
+  tabRoster.classList.add('active');
+  tabSeason.classList.remove('active');
+  panelRoster.style.display = '';
+  panelSeason.style.display = 'none';
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('setup-screen').classList.add('active');
+  renderSetup();
+}
+
+btnBackSetup.addEventListener('click', goBackToSetup);
 
 // Adjust play/position time for all on-field players by delta seconds
 function adjustPlayerTimes(delta) {
@@ -872,6 +888,10 @@ const reportModal = document.getElementById('report-modal');
 
 document.getElementById('report-close').addEventListener('click', () => {
   reportModal.classList.remove('active');
+  if (state.timer.phase === 'fulltime') {
+    doReset();
+    goBackToSetup();
+  }
 });
 
 // ─────────────────────────────────────────────
