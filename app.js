@@ -80,6 +80,51 @@ const state = {
 };
 
 // ─────────────────────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBackToHome() {
+  showScreen('home-screen');
+}
+
+// Home screen tile buttons
+document.getElementById('btn-home-start').addEventListener('click', () => {
+  showScreen('setup-screen');
+  tabRoster.classList.add('active');
+  tabSeason.classList.remove('active');
+  panelRoster.style.display = '';
+  panelSeason.style.display = 'none';
+});
+
+document.getElementById('btn-home-roster').addEventListener('click', () => {
+  showScreen('setup-screen');
+  tabRoster.classList.add('active');
+  tabSeason.classList.remove('active');
+  panelRoster.style.display = '';
+  panelSeason.style.display = 'none';
+});
+
+document.getElementById('btn-home-season').addEventListener('click', () => {
+  showScreen('setup-screen');
+  tabSeason.classList.add('active');
+  tabRoster.classList.remove('active');
+  panelRoster.style.display = 'none';
+  panelSeason.style.display = '';
+  renderSeasonTab();
+});
+
+document.getElementById('btn-home-practice').addEventListener('click', () => {
+  showScreen('drills-screen');
+});
+
+document.getElementById('btn-back-home').addEventListener('click', goBackToHome);
+document.getElementById('btn-back-home-drills').addEventListener('click', goBackToHome);
+
+// ─────────────────────────────────────────────
 //  SETUP SCREEN
 // ─────────────────────────────────────────────
 const setupCount   = document.getElementById('setup-count');
@@ -247,8 +292,7 @@ btnStartGame.addEventListener('click', () => {
     state.playTime[num] = 0;
     state.posTime[num]  = { fw:0, def:0, gk:0 };
   });
-  document.getElementById('setup-screen').classList.remove('active');
-  document.getElementById('game-screen').classList.add('active');
+  showScreen('game-screen');
   renderGame();
 });
 
@@ -386,8 +430,7 @@ function goBackToSetup() {
   tabSeason.classList.remove('active');
   panelRoster.style.display = '';
   panelSeason.style.display = 'none';
-  document.getElementById('game-screen').classList.remove('active');
-  document.getElementById('setup-screen').classList.add('active');
+  showScreen('setup-screen');
   renderSetup();
 }
 
@@ -995,7 +1038,6 @@ loadRoster();       // load roster first
 loadSeason();       // load season data
 renderSetup();      // draw setup screen (empty roster or saved one)
 if (restoreState()) {
-  document.getElementById('setup-screen').classList.remove('active');
-  document.getElementById('game-screen').classList.add('active');
+  showScreen('game-screen');
   renderGame();
 }

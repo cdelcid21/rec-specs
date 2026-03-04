@@ -13,9 +13,35 @@
 </head>
 <body>
 
+<!-- ══ HOME SCREEN ════════════════════════════ -->
+<div id="home-screen" class="view active">
+  <div class="home-header">
+    <h1>Rec Specs</h1>
+  </div>
+  <div class="home-tiles">
+    <button class="home-tile tile-start"    id="btn-home-start">
+      <span class="tile-icon">&#9654;</span>
+      <span class="tile-label">Start Game</span>
+    </button>
+    <button class="home-tile tile-roster"   id="btn-home-roster">
+      <span class="tile-icon">&#128101;</span>
+      <span class="tile-label">Edit Roster</span>
+    </button>
+    <button class="home-tile tile-season"   id="btn-home-season">
+      <span class="tile-icon">&#128200;</span>
+      <span class="tile-label">Season Stats</span>
+    </button>
+    <button class="home-tile tile-practice" id="btn-home-practice">
+      <span class="tile-icon">&#9917;</span>
+      <span class="tile-label">Practice</span>
+    </button>
+  </div>
+</div>
+
 <!-- ══ SETUP SCREEN ══════════════════════════ -->
-<div id="setup-screen" class="view active">
+<div id="setup-screen" class="view">
   <div class="setup-header">
+    <button class="btn-back-home" id="btn-back-home">&#8592;</button>
     <h1>Rec Specs</h1>
     <p id="setup-count">Add players to your roster</p>
   </div>
@@ -140,6 +166,19 @@
     <div class="modal-buttons" style="margin-top:18px">
       <button class="btn-modal no" id="report-close">Close</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ DRILLS SCREEN ══════════════════════════ -->
+<div id="drills-screen" class="view">
+  <div class="drills-header">
+    <button class="btn-back-home" id="btn-back-home-drills">&#8592;</button>
+    <h1>Practice</h1>
+  </div>
+  <div class="drills-coming-soon">
+    <span class="coming-soon-icon">&#9917;</span>
+    <p>Drill suggestions coming soon</p>
+    <p class="coming-soon-sub">AI-powered practice plans based on your season stats</p>
   </div>
 </div>
 

@@ -30,10 +30,62 @@ html, body {
 .view { display: none; height: 100dvh; flex-direction: column; }
 .view.active { display: flex; }
 
+/* ── Home Screen ────────────────────────── */
+#home-screen {
+  padding: 48px 24px 32px;
+  justify-content: flex-start;
+}
+
+.home-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.home-header h1 {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  color: var(--green-field);
+}
+
+.home-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+
+.home-tile {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 22px 24px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  text-align: left;
+  flex-shrink: 0;
+}
+.tile-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.tile-label { flex: 1; }
+
+.tile-start    { background: #16a34a; }
+.tile-roster   { background: #2563eb; }
+.tile-season   { background: #7c3aed; }
+.tile-practice { background: #d97706; }
+
 /* ── Setup Screen ───────────────────────── */
 #setup-screen { padding: 28px 20px 0; }
 
 .setup-header {
+  position: relative;
   text-align: center;
   margin-bottom: 28px;
 }
@@ -47,6 +99,63 @@ html, body {
   font-size: 13px;
   color: var(--gray);
   margin-top: 5px;
+}
+
+.btn-back-home {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--gray);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+/* ── Drills Screen ──────────────────────── */
+#drills-screen { padding: 28px 20px 0; }
+
+.drills-header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 48px;
+}
+.drills-header h1 {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #d97706;
+}
+
+.drills-coming-soon {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-bottom: 80px;
+}
+.coming-soon-icon {
+  font-size: 64px;
+  opacity: 0.5;
+}
+.drills-coming-soon p {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  opacity: 0.7;
+}
+.coming-soon-sub {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--gray) !important;
+  opacity: 1 !important;
+  text-align: center;
+  max-width: 260px;
 }
 
 /* ── Roster List ────────────────────────── */
