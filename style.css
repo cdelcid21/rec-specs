@@ -49,40 +49,61 @@ html, body {
   margin-top: 5px;
 }
 
-/* ── Number Grid ────────────────────────── */
-.number-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+/* ── Roster List ────────────────────────── */
+.roster-list {
   flex: 1;
-  align-content: start;
   overflow-y: auto;
   padding-bottom: 8px;
 }
-
-.num-btn {
-  aspect-ratio: 1;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 50%;
-  color: var(--gray);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
+.roster-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
 }
-
-.num-btn.selected {
+.roster-check {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.roster-check.checked {
   background: var(--green-field);
   border-color: var(--green-field);
-  color: white;
+}
+.roster-name { flex: 1; font-size: 15px; font-weight: 700; }
+.roster-num  { font-size: 12px; color: var(--gray); }
+.roster-remove {
+  background: transparent; border: none;
+  color: var(--gray); font-size: 14px; cursor: pointer; padding: 4px 8px;
 }
 
-.num-btn:active { opacity: 0.75; }
+/* ── Add Player Row ─────────────────────── */
+.add-player-row {
+  display: flex; gap: 8px;
+  padding: 10px 0 8px;
+  border-top: 1px solid var(--border);
+}
+.add-input {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 10px; color: var(--white);
+  font-size: 15px; padding: 10px 12px;
+  -webkit-appearance: none;
+}
+.add-input:focus { outline: none; border-color: var(--green-field); }
+.add-input.add-num { width: 64px; }
+.btn-add {
+  background: var(--green-field); color: white;
+  border: none; border-radius: 10px;
+  font-size: 22px; font-weight: 700;
+  padding: 0 16px; cursor: pointer; flex-shrink: 0;
+}
+
+/* ── Player token — name display ───────── */
+.player-token { font-size: 11px; }
 
 .setup-footer {
   padding: 16px 0 max(20px, env(safe-area-inset-bottom));
@@ -568,12 +589,8 @@ html, body {
 .report-row.moderate .report-dot { background: transparent; }
 .report-row.heavy    .report-dot { background: #ef4444; }
 
-.report-num {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--white);
-  min-width: 32px;
-}
+.report-name   { font-size: 14px; font-weight: 800; color: var(--white); flex: 1; }
+.report-jersey { font-size: 11px; color: var(--gray); min-width: 28px; text-align: right; }
 .report-time {
   font-size: 12px;
   font-weight: 600;

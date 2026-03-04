@@ -20,7 +20,12 @@
     <p id="setup-count">Tap to select your players</p>
   </div>
 
-  <div class="number-grid" id="number-grid"></div>
+  <div class="roster-list" id="roster-list"></div>
+  <div class="add-player-row">
+    <input class="add-input" type="text"   id="add-name" placeholder="Name"  maxlength="14">
+    <input class="add-input add-num" type="number" id="add-num"  placeholder="#" min="0" max="99">
+    <button class="btn-add" id="btn-add-player">+</button>
+  </div>
 
   <div class="setup-footer">
     <button class="btn-start" id="btn-start-game" disabled>Start Game</button>

@@ -23,6 +23,24 @@ const MODERATE_PLAY_RATIO= 0.40;  // play-time fraction at or above which a play
 const FREE_DRAG_MIN_PCT  = 3;     // lower clamp (%) for free-drag token position in draw mode
 const FREE_DRAG_MAX_PCT  = 97;    // upper clamp (%) for free-drag token position in draw mode
 const STORAGE_KEY        = 'rec-specs-state'; // localStorage key for session persistence
+const ROSTER_KEY         = 'rec-specs-roster';
+
+let roster = []; // persistent player list: [{ num, name }]
+
+function saveRoster() {
+  try { localStorage.setItem(ROSTER_KEY, JSON.stringify(roster)); } catch (_) {}
+}
+function loadRoster() {
+  try {
+    const raw = localStorage.getItem(ROSTER_KEY);
+    if (raw) roster = JSON.parse(raw);
+  } catch (_) {}
+}
+// Return display name for a jersey number (falls back to #num if not on roster)
+function playerName(num) {
+  const p = roster.find(p => p.num === num);
+  return p ? p.name : `#${num}`;
+}
 
 const state = {
   players: [],
@@ -45,36 +63,71 @@ const state = {
 // ─────────────────────────────────────────────
 const setupCount   = document.getElementById('setup-count');
 const btnStartGame = document.getElementById('btn-start-game');
-const numberGrid   = document.getElementById('number-grid');
-
-// Build tap-to-select grid (0–30)
-for (let i = 0; i <= 30; i++) {
-  const btn = document.createElement('button');
-  btn.className   = 'num-btn';
-  btn.dataset.num = String(i);
-  btn.textContent = i;
-  btn.addEventListener('click', () => {
-    const num = btn.dataset.num;
-    if (state.players.includes(num)) {
-      state.players = state.players.filter(p => p !== num);
-    } else {
-      state.players.push(num);
-    }
-    renderSetup();
-  });
-  numberGrid.appendChild(btn);
-}
+const rosterList   = document.getElementById('roster-list');
+const addNameEl    = document.getElementById('add-name');
+const addNumEl     = document.getElementById('add-num');
+const btnAddPlayer = document.getElementById('btn-add-player');
 
 function renderSetup() {
-  numberGrid.querySelectorAll('.num-btn').forEach(btn => {
-    btn.classList.toggle('selected', state.players.includes(btn.dataset.num));
+  rosterList.innerHTML = '';
+  roster.forEach(({ num, name }) => {
+    const item = document.createElement('div');
+    item.className = 'roster-item';
+    const isIn = state.players.includes(num);
+
+    item.innerHTML = `
+      <button class="roster-check ${isIn ? 'checked' : ''}" data-num="${num}"></button>
+      <span class="roster-name">${name}</span>
+      <span class="roster-num">#${num}</span>
+      <button class="roster-remove" data-num="${num}">✕</button>`;
+    rosterList.appendChild(item);
   });
+
+  rosterList.querySelectorAll('.roster-check').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const num = btn.dataset.num;
+      if (state.players.includes(num)) {
+        state.players = state.players.filter(p => p !== num);
+      } else {
+        state.players.push(num);
+      }
+      renderSetup();
+    });
+  });
+
+  rosterList.querySelectorAll('.roster-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const num = btn.dataset.num;
+      roster = roster.filter(p => p.num !== num);
+      state.players = state.players.filter(p => p !== num);
+      saveRoster();
+      renderSetup();
+    });
+  });
+
   const n = state.players.length;
-  setupCount.textContent = n === 0
-    ? 'Tap to select your players'
-    : `${n} player${n !== 1 ? 's' : ''} selected`;
+  setupCount.textContent = roster.length === 0
+    ? 'Add players to your roster'
+    : `${n} of ${roster.length} player${roster.length !== 1 ? 's' : ''} selected`;
   btnStartGame.disabled = n < 1;
 }
+
+btnAddPlayer.addEventListener('click', () => {
+  const name = addNameEl.value.trim();
+  const num  = addNumEl.value.trim();
+  if (!name || !num) return;
+  if (roster.some(p => p.num === num)) return; // no duplicate jersey numbers
+  roster.push({ num, name });
+  saveRoster();
+  addNameEl.value = '';
+  addNumEl.value  = '';
+  renderSetup();
+});
+
+// Allow pressing Enter in either input to add the player
+[addNameEl, addNumEl].forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') btnAddPlayer.click(); });
+});
 
 btnStartGame.addEventListener('click', () => {
   state.subs = [...state.players];
@@ -308,7 +361,7 @@ function renderSubs() {
 function makeToken(num, cls, origin) {
   const el = document.createElement('div');
   el.className = `player-token ${cls}`;
-  el.textContent = `#${num}`;
+  el.textContent = playerName(num);
   el.dataset.num    = num;
   el.dataset.origin = origin;
   el.addEventListener('touchstart', onTouchStart, { passive: false });
@@ -453,7 +506,7 @@ const confirmYes   = document.getElementById('confirm-yes');
 const confirmNo    = document.getElementById('confirm-no');
 
 function showConfirm(inNum, outNum) {
-  confirmText.textContent = `Put #${inNum} in for #${outNum}?`;
+  confirmText.textContent = `Put ${playerName(inNum)} in for ${playerName(outNum)}?`;
   confirmModal.classList.add('active');
 }
 
@@ -521,7 +574,7 @@ function enterDrawMode() {
     const { x, y } = ZONE_POS[zone];
     const token = document.createElement('div');
     token.className = 'player-token on-field draw-token';
-    token.textContent = `#${num}`;
+    token.textContent = playerName(num);
     token.dataset.num  = num;
     token.dataset.zone = zone;
     token.style.left = x + '%';
@@ -791,7 +844,8 @@ function showReport(phase) {
     row.className = `report-row ${statusClass}`;
     row.innerHTML = `
       <div class="report-dot"></div>
-      <div class="report-num">#${num}</div>
+      <div class="report-name">${playerName(num)}</div>
+      <div class="report-jersey">#${num}</div>
       <div class="report-time">${fmtPlayTime(total)}</div>
       <div class="report-bar-outer">
         <div class="bar-fw"  style="width:${fwW}%"></div>
@@ -807,6 +861,8 @@ function showReport(phase) {
 // ─────────────────────────────────────────────
 //  STARTUP — restore previous session if saved
 // ─────────────────────────────────────────────
+loadRoster();       // load roster first
+renderSetup();      // draw setup screen (empty roster or saved one)
 if (restoreState()) {
   document.getElementById('setup-screen').classList.remove('active');
   document.getElementById('game-screen').classList.add('active');
