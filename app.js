@@ -1364,7 +1364,8 @@ timerBarEl.addEventListener('touchend', e => {
   if (!swipeStarted) return;
   swipeStarted = false;
   const dy = e.changedTouches[0].clientY - swipeStartY;
-  if (dy > 60) minimizeGame();
+  const phase = state.timer.phase;
+  if (dy > 60 && phase !== 'idle' && phase !== 'fulltime') minimizeGame();
 });
 
 document.getElementById('game-mini-bar').addEventListener('click', e => {
