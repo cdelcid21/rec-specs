@@ -262,12 +262,22 @@ document.getElementById('btn-back-home-gamesetup').addEventListener('click', goB
 // ─────────────────────────────────────────────
 const rosterList = document.getElementById('roster-list');
 
+let rosterToastTimer = null;
+function showRosterToast(msg) {
+  const el = document.getElementById('roster-toast');
+  el.textContent = msg;
+  el.classList.add('visible');
+  clearTimeout(rosterToastTimer);
+  rosterToastTimer = setTimeout(() => el.classList.remove('visible'), 2000);
+}
+
 function renderRoster() {
   const rosterCount = document.getElementById('roster-count');
   rosterList.innerHTML = '';
   roster.forEach(({ num, name }) => {
     const item = document.createElement('div');
     item.className = 'roster-item';
+    if (gameMinimized) item.classList.add('locked');
     item.dataset.num = num;
     item.innerHTML = `
       <span class="roster-name">${name}</span>
@@ -277,6 +287,10 @@ function renderRoster() {
 
   rosterList.querySelectorAll('.roster-item').forEach(item => {
     item.addEventListener('click', () => {
+      if (gameMinimized) {
+        showRosterToast("Can't edit roster during a game");
+        return;
+      }
       const player = roster.find(p => p.num === item.dataset.num);
       if (player) openPlayerModal('edit', player);
     });
