@@ -128,10 +128,16 @@ function goBackToHome() {
 }
 
 // ── Bottom Nav ──────────────────────────────────
+const TAB_ORDER = { game: 0, roster: 1, stats: 2, practice: 3 };
+
 function setActiveTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   const el = document.getElementById('nav-' + tab);
   if (el) el.classList.add('active');
+  const pill = document.getElementById('nav-pill');
+  if (pill && TAB_ORDER[tab] !== undefined) {
+    pill.style.transform = `translateX(${TAB_ORDER[tab] * 100}%)`;
+  }
 }
 
 document.getElementById('nav-game').addEventListener('click', () => {
@@ -1130,4 +1136,6 @@ updateHomeScreen(); // set adaptive home state based on roster
 if (restoreState()) {
   showScreen('game-screen');
   renderGame();
+} else {
+  setActiveTab('game');
 }
