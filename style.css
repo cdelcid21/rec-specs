@@ -301,12 +301,6 @@ html, body {
 }
 .roster-name { flex: 1; font-size: 15px; font-weight: 700; }
 .roster-num  { font-size: 12px; color: var(--gray); }
-.roster-remove {
-  background: transparent; border: none;
-  color: var(--gray); cursor: pointer; padding: 4px 8px;
-  display: flex; align-items: center; justify-content: center;
-}
-.roster-remove svg { width: 16px; height: 16px; }
 
 /* ── Player Modal Inputs ────────────────── */
 .add-input {
@@ -785,6 +779,18 @@ html, body {
 .btn-modal.yes { background: var(--green-field); color: white; }
 .btn-modal.no  { background: var(--border); color: var(--gray); }
 .btn-modal:active { opacity: 0.75; }
+.btn-modal-delete {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--red);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 0 2px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.btn-modal-delete:active { opacity: 0.5; }
 
 /* ── Halftime / Fulltime Report ─────────── */
 .report-box {

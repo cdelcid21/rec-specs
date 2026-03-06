@@ -68,6 +68,10 @@ function playerName(num) {
   return p ? p.name : `#${num}`;
 }
 
+function hasPlayerPlayTime(num) {
+  return season.some(game => game.players.includes(num) && (game.playTime[num] || 0) > 0);
+}
+
 const state = {
   players: [],
   field:   { fw1:null, fw2:null, fw3:null, def1:null, def2:null, def3:null, gk:null },
@@ -193,25 +197,12 @@ function renderRoster() {
     item.dataset.num = num;
     item.innerHTML = `
       <span class="roster-name">${name}</span>
-      <span class="roster-num">#${num}</span>
-      <button class="roster-remove" data-num="${num}">${SVG_XMARK}</button>`;
+      <span class="roster-num">#${num}</span>`;
     rosterList.appendChild(item);
   });
 
-  rosterList.querySelectorAll('.roster-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const num = btn.dataset.num;
-      roster = roster.filter(p => p.num !== num);
-      state.players = state.players.filter(p => p !== num);
-      saveRoster();
-      updateHomeScreen();
-      renderRoster();
-    });
-  });
-
   rosterList.querySelectorAll('.roster-item').forEach(item => {
-    item.addEventListener('click', e => {
-      if (e.target.classList.contains('roster-remove')) return;
+    item.addEventListener('click', () => {
       const player = roster.find(p => p.num === item.dataset.num);
       if (player) openPlayerModal('edit', player);
     });
@@ -233,6 +224,7 @@ function openPlayerModal(mode, player = null) {
   document.getElementById('player-modal-name').value = player ? player.name : '';
   document.getElementById('player-modal-num').value  = player ? player.num  : '';
   playerModalEditNum = player ? player.num : null;
+  document.getElementById('player-modal-delete').style.display = mode === 'edit' ? '' : 'none';
   document.getElementById('player-modal').classList.add('active');
   document.getElementById('player-modal-name').focus();
 }
@@ -243,6 +235,19 @@ function closePlayerModal() {
 }
 
 document.getElementById('player-modal-cancel').addEventListener('click', closePlayerModal);
+
+document.getElementById('player-modal-delete').addEventListener('click', () => {
+  const num  = playerModalEditNum;
+  const name = roster.find(p => p.num === num)?.name ?? `#${num}`;
+  closePlayerModal();
+  pendingDelete = num;
+  document.getElementById('confirm-title').textContent = 'Delete Player?';
+  confirmText.textContent = hasPlayerPlayTime(num)
+    ? `Remove ${name} from the roster? Their season stats will also be deleted.`
+    : `Remove ${name} from the roster?`;
+  document.getElementById('confirm-yes').textContent = 'Delete';
+  confirmModal.classList.add('active');
+});
 
 document.getElementById('player-modal-save').addEventListener('click', () => {
   const name = document.getElementById('player-modal-name').value.trim();
@@ -739,7 +744,8 @@ function placeOnField(num, origin, zone) {
 // ─────────────────────────────────────────────
 //  CONFIRMATION MODAL
 // ─────────────────────────────────────────────
-let pendingSub = null;
+let pendingSub    = null;
+let pendingDelete = null;
 
 const confirmModal = document.getElementById('confirm-modal');
 const confirmText  = document.getElementById('confirm-text');
@@ -753,6 +759,25 @@ function showConfirm(inNum, outNum) {
 
 confirmYes.addEventListener('click', () => {
   confirmModal.classList.remove('active');
+  document.getElementById('confirm-title').textContent = 'Make Sub?';
+  document.getElementById('confirm-yes').textContent   = 'Sub In';
+
+  if (pendingDelete) {
+    const num = pendingDelete;
+    pendingDelete = null;
+    roster = roster.filter(p => p.num !== num);
+    state.players = state.players.filter(p => p !== num);
+    season = season.map(game => ({
+      ...game,
+      players: game.players.filter(n => n !== num),
+    }));
+    try { localStorage.setItem(SEASON_KEY, JSON.stringify(season)); } catch (_) {}
+    saveRoster();
+    updateHomeScreen();
+    renderRoster();
+    return;
+  }
+
   if (!pendingSub) return;
   const { num, occupant, zone } = pendingSub;
   state.subs        = state.subs.filter(p => p !== num);
@@ -764,7 +789,10 @@ confirmYes.addEventListener('click', () => {
 
 confirmNo.addEventListener('click', () => {
   confirmModal.classList.remove('active');
-  pendingSub = null;
+  document.getElementById('confirm-title').textContent = 'Make Sub?';
+  document.getElementById('confirm-yes').textContent   = 'Sub In';
+  pendingDelete = null;
+  pendingSub    = null;
 });
 
 // ─────────────────────────────────────────────
