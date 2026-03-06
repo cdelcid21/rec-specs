@@ -92,7 +92,8 @@ function showScreen(id) {
     fab.style.display = 'none';
   } else {
     nav.classList.remove('hidden');
-    fab.style.display = (id === 'home-screen' && roster.length > 0) ? '' : 'none';
+    fab.style.display = (id === 'home-screen' && roster.length > 0) || id === 'roster-screen'
+      ? '' : 'none';
   }
 }
 
@@ -101,16 +102,17 @@ function updateHomeScreen() {
   const empty = document.getElementById('home-empty');
   const count = document.getElementById('home-roster-count');
   const fab   = document.getElementById('btn-fab');
-  const isHome = document.getElementById('home-screen').classList.contains('active');
+  const isHome   = document.getElementById('home-screen').classList.contains('active');
+  const isRoster = document.getElementById('roster-screen').classList.contains('active');
   if (roster.length === 0) {
     cta.style.display   = 'none';
     empty.style.display = '';
-    fab.style.display   = 'none';
+    if (!isRoster) fab.style.display = 'none';
   } else {
     cta.style.display   = '';
     empty.style.display = 'none';
     count.textContent   = roster.length + ' player' + (roster.length !== 1 ? 's' : '') + ' in roster';
-    fab.style.display   = isHome ? '' : 'none';
+    if (!isRoster) fab.style.display = isHome ? '' : 'none';
   }
 }
 
@@ -150,11 +152,16 @@ document.getElementById('nav-practice').addEventListener('click', () => {
   setActiveTab('practice');
 });
 
-// FAB → goes to game setup (fresh selection each time)
+// FAB → context-aware: add player on roster screen, start game elsewhere
 document.getElementById('btn-fab').addEventListener('click', () => {
-  state.players = [];
-  showScreen('game-setup-screen');
-  renderGameSetup();
+  const active = document.querySelector('.view.active');
+  if (active && active.id === 'roster-screen') {
+    openPlayerModal('add');
+  } else {
+    state.players = [];
+    showScreen('game-setup-screen');
+    renderGameSetup();
+  }
 });
 
 document.getElementById('btn-back-home-stats').addEventListener('click', goBackToHome);
@@ -162,12 +169,9 @@ document.getElementById('btn-back-home-drills').addEventListener('click', goBack
 document.getElementById('btn-back-home-gamesetup').addEventListener('click', goBackToHome);
 
 // ─────────────────────────────────────────────
-//  ROSTER SCREEN  (management: add / delete)
+//  ROSTER SCREEN  (management: add / edit / delete)
 // ─────────────────────────────────────────────
-const rosterList   = document.getElementById('roster-list');
-const addNameEl    = document.getElementById('add-name');
-const addNumEl     = document.getElementById('add-num');
-const btnAddPlayer = document.getElementById('btn-add-player');
+const rosterList = document.getElementById('roster-list');
 
 function renderRoster() {
   const rosterCount = document.getElementById('roster-count');
@@ -175,6 +179,7 @@ function renderRoster() {
   roster.forEach(({ num, name }) => {
     const item = document.createElement('div');
     item.className = 'roster-item';
+    item.dataset.num = num;
     item.innerHTML = `
       <span class="roster-name">${name}</span>
       <span class="roster-num">#${num}</span>
@@ -193,27 +198,70 @@ function renderRoster() {
     });
   });
 
+  rosterList.querySelectorAll('.roster-item').forEach(item => {
+    item.addEventListener('click', e => {
+      if (e.target.classList.contains('roster-remove')) return;
+      const player = roster.find(p => p.num === item.dataset.num);
+      if (player) openPlayerModal('edit', player);
+    });
+  });
+
   rosterCount.textContent = roster.length === 0
-    ? 'Add players to your roster'
+    ? 'Tap + to add players'
     : `${roster.length} player${roster.length !== 1 ? 's' : ''} on your roster`;
 }
 
-btnAddPlayer.addEventListener('click', () => {
-  const name = addNameEl.value.trim();
-  const num  = addNumEl.value.trim();
+// ── Player modal (add / edit) ─────────────────
+let playerModalMode    = 'add';
+let playerModalEditNum = null;
+
+function openPlayerModal(mode, player = null) {
+  playerModalMode = mode;
+  document.getElementById('player-modal-title').textContent =
+    mode === 'edit' ? 'Edit Player' : 'Add Player';
+  document.getElementById('player-modal-name').value = player ? player.name : '';
+  document.getElementById('player-modal-num').value  = player ? player.num  : '';
+  playerModalEditNum = player ? player.num : null;
+  document.getElementById('player-modal').classList.add('active');
+  document.getElementById('player-modal-name').focus();
+}
+
+function closePlayerModal() {
+  document.getElementById('player-modal').classList.remove('active');
+  playerModalEditNum = null;
+}
+
+document.getElementById('player-modal-cancel').addEventListener('click', closePlayerModal);
+
+document.getElementById('player-modal-save').addEventListener('click', () => {
+  const name = document.getElementById('player-modal-name').value.trim();
+  const num  = document.getElementById('player-modal-num').value.trim();
   if (!name || !num) return;
-  if (roster.some(p => p.num === num)) return; // no duplicate jersey numbers
-  roster.push({ num, name });
+
+  if (playerModalMode === 'edit') {
+    if (num !== playerModalEditNum && roster.some(p => p.num === num)) return;
+    const p = roster.find(p => p.num === playerModalEditNum);
+    if (p) {
+      const idx = state.players.indexOf(playerModalEditNum);
+      if (idx !== -1) state.players[idx] = num;
+      p.name = name;
+      p.num  = num;
+    }
+  } else {
+    if (roster.some(p => p.num === num)) return;
+    roster.push({ num, name });
+  }
+
   saveRoster();
   updateHomeScreen();
-  addNameEl.value = '';
-  addNumEl.value  = '';
+  closePlayerModal();
   renderRoster();
 });
 
-// Allow pressing Enter in either input to add the player
-[addNameEl, addNumEl].forEach(el => {
-  el.addEventListener('keydown', e => { if (e.key === 'Enter') btnAddPlayer.click(); });
+['player-modal-name', 'player-modal-num'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('player-modal-save').click();
+  });
 });
 
 // ─────────────────────────────────────────────

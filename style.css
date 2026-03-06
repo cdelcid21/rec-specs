@@ -264,7 +264,9 @@ html, body {
   gap: 10px;
   padding: 10px 4px;
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
 }
+.roster-item:active { background: rgba(255,255,255,0.04); border-radius: 8px; }
 .roster-check {
   width: 28px; height: 28px;
   border-radius: 50%;
@@ -284,12 +286,7 @@ html, body {
   color: var(--gray); font-size: 14px; cursor: pointer; padding: 4px 8px;
 }
 
-/* ── Add Player Row ─────────────────────── */
-.add-player-row {
-  display: flex; gap: 8px;
-  padding: 10px 0 8px;
-  border-top: 1px solid var(--border);
-}
+/* ── Player Modal Inputs ────────────────── */
 .add-input {
   background: var(--surface); border: 1.5px solid var(--border);
   border-radius: 10px; color: var(--white);
@@ -298,12 +295,12 @@ html, body {
 }
 .add-input:focus { outline: none; border-color: var(--green-field); }
 .add-input.add-num { width: 64px; }
-.btn-add {
-  background: var(--green-field); color: white;
-  border: none; border-radius: 10px;
-  font-size: 22px; font-weight: 700;
-  padding: 0 16px; cursor: pointer; flex-shrink: 0;
+.player-modal-inputs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
 }
+.player-modal-inputs .add-input:first-child { flex: 1; }
 
 .season-stats {
   flex: 1;

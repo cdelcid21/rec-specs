@@ -45,11 +45,6 @@
     <p id="roster-count">Add players to your roster</p>
   </div>
   <div class="roster-list" id="roster-list"></div>
-  <div class="add-player-row">
-    <input class="add-input" type="text"   id="add-name" placeholder="Name"  maxlength="14">
-    <input class="add-input add-num" type="number" id="add-num"  placeholder="#" min="0" max="99">
-    <button class="btn-add" id="btn-add-player">+</button>
-  </div>
 </div>
 
 <!-- ══ GAME SETUP SCREEN ══════════════════════ -->
@@ -145,6 +140,21 @@
 
 <!-- ══ DRAG CLONE ════════════════════════════ -->
 <div id="drag-clone"></div>
+
+<!-- ══ PLAYER MODAL (add / edit) ════════════ -->
+<div class="modal-overlay" id="player-modal">
+  <div class="modal-box">
+    <h3 id="player-modal-title">Add Player</h3>
+    <div class="player-modal-inputs">
+      <input class="add-input" type="text" id="player-modal-name" placeholder="Name" maxlength="14">
+      <input class="add-input add-num" type="number" id="player-modal-num" placeholder="#" min="0" max="99">
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-modal yes" id="player-modal-save">Save</button>
+      <button class="btn-modal no"  id="player-modal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ CONFIRMATION MODAL ════════════════════ -->
 <div class="modal-overlay" id="confirm-modal">
