@@ -100,6 +100,11 @@ function minimizeGame() {
   gs.classList.add('sheet-hidden');
   document.getElementById('game-mini-bar').classList.add('visible');
   document.getElementById('bottom-nav').classList.remove('hidden');
+  // Activate home screen underneath the sliding sheet
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('home-screen').classList.add('active');
+  setActiveTab('game');
+  updateHomeScreen();
   updateMiniBar();
 }
 
