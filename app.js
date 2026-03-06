@@ -166,7 +166,7 @@ function showScreen(id) {
     fab.style.display = 'none';
   } else {
     if (!gameMinimized) nav.classList.remove('hidden');
-    fab.style.display = (id === 'home-screen' && roster.length > 0) || id === 'roster-screen'
+    fab.style.display = ((id === 'home-screen' && roster.length > 0) || id === 'roster-screen') && !gameMinimized
       ? '' : 'none';
   }
 }
@@ -186,7 +186,7 @@ function updateHomeScreen() {
     cta.style.display   = '';
     empty.style.display = 'none';
     count.textContent   = roster.length + ' player' + (roster.length !== 1 ? 's' : '') + ' in roster';
-    if (!isRoster) fab.style.display = isHome ? '' : 'none';
+    if (!isRoster) fab.style.display = isHome && !gameMinimized ? '' : 'none';
   }
 }
 
