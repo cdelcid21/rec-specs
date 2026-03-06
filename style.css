@@ -316,8 +316,9 @@ html, body {
   display: flex;
   gap: 8px;
   margin-bottom: 22px;
+  width: 100%;
 }
-.player-modal-inputs .add-input:first-child { flex: 1; }
+.player-modal-inputs .add-input:first-child { flex: 1; min-width: 0; }
 
 .season-stats {
   flex: 1;

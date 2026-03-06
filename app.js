@@ -405,6 +405,10 @@ function closePlayerModal() {
 
 document.getElementById('player-modal-cancel').addEventListener('click', closePlayerModal);
 
+document.getElementById('player-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePlayerModal();
+});
+
 document.getElementById('player-modal-delete').addEventListener('click', () => {
   const num  = playerModalEditNum;
   const name = roster.find(p => p.num === num)?.name ?? `#${num}`;
