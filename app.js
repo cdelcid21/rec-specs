@@ -85,40 +85,80 @@ const state = {
 function showScreen(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // Hide bottom nav during live game
+  const nav = document.getElementById('bottom-nav');
+  if (id === 'game-screen') {
+    nav.classList.add('hidden');
+  } else {
+    nav.classList.remove('hidden');
+  }
+}
+
+function updateHomeScreen() {
+  const cta   = document.getElementById('home-cta');
+  const empty = document.getElementById('home-empty');
+  const count = document.getElementById('home-roster-count');
+  if (roster.length === 0) {
+    cta.style.display   = 'none';
+    empty.style.display = '';
+  } else {
+    cta.style.display   = '';
+    empty.style.display = 'none';
+    count.textContent   = roster.length + ' player' + (roster.length !== 1 ? 's' : '') + ' in roster';
+  }
 }
 
 function goBackToHome() {
+  updateHomeScreen();
   showScreen('home-screen');
+  setActiveTab('game');
 }
 
-// Home screen tile buttons
-document.getElementById('btn-home-start').addEventListener('click', () => {
-  showScreen('setup-screen');
-  tabRoster.classList.add('active');
-  tabSeason.classList.remove('active');
-  panelRoster.style.display = '';
-  panelSeason.style.display = 'none';
+// ── Bottom Nav ──────────────────────────────────
+function setActiveTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const el = document.getElementById('nav-' + tab);
+  if (el) el.classList.add('active');
+}
+
+document.getElementById('nav-game').addEventListener('click', () => {
+  updateHomeScreen();
+  showScreen('home-screen');
+  setActiveTab('game');
 });
 
-document.getElementById('btn-home-roster').addEventListener('click', () => {
+document.getElementById('nav-roster').addEventListener('click', () => {
   showScreen('setup-screen');
-  tabRoster.classList.add('active');
-  tabSeason.classList.remove('active');
-  panelRoster.style.display = '';
-  panelSeason.style.display = 'none';
+  setActiveTab('roster');
+  document.getElementById('tab-roster').classList.add('active');
+  document.getElementById('tab-season').classList.remove('active');
+  document.getElementById('panel-roster').style.display = '';
+  document.getElementById('panel-season').style.display = 'none';
 });
 
-document.getElementById('btn-home-season').addEventListener('click', () => {
+document.getElementById('nav-stats').addEventListener('click', () => {
   showScreen('setup-screen');
-  tabSeason.classList.add('active');
-  tabRoster.classList.remove('active');
-  panelRoster.style.display = 'none';
-  panelSeason.style.display = '';
+  setActiveTab('stats');
+  document.getElementById('tab-season').classList.add('active');
+  document.getElementById('tab-roster').classList.remove('active');
+  document.getElementById('panel-season').style.display = '';
+  document.getElementById('panel-roster').style.display = 'none';
   renderSeasonTab();
 });
 
-document.getElementById('btn-home-practice').addEventListener('click', () => {
+document.getElementById('nav-practice').addEventListener('click', () => {
   showScreen('drills-screen');
+  setActiveTab('practice');
+});
+
+// Home screen "Start Game" CTA → goes to setup (roster tab)
+document.getElementById('btn-home-start').addEventListener('click', () => {
+  showScreen('setup-screen');
+  setActiveTab('roster');
+  document.getElementById('tab-roster').classList.add('active');
+  document.getElementById('tab-season').classList.remove('active');
+  document.getElementById('panel-roster').style.display = '';
+  document.getElementById('panel-season').style.display = 'none';
 });
 
 document.getElementById('btn-back-home').addEventListener('click', goBackToHome);
@@ -167,6 +207,7 @@ function renderSetup() {
       roster = roster.filter(p => p.num !== num);
       state.players = state.players.filter(p => p !== num);
       saveRoster();
+      updateHomeScreen();
       renderSetup();
     });
   });
@@ -185,6 +226,7 @@ btnAddPlayer.addEventListener('click', () => {
   if (roster.some(p => p.num === num)) return; // no duplicate jersey numbers
   roster.push({ num, name });
   saveRoster();
+  updateHomeScreen();
   addNameEl.value = '';
   addNumEl.value  = '';
   renderSetup();
@@ -1037,6 +1079,7 @@ function showReport(phase) {
 loadRoster();       // load roster first
 loadSeason();       // load season data
 renderSetup();      // draw setup screen (empty roster or saved one)
+updateHomeScreen(); // set adaptive home state based on roster
 if (restoreState()) {
   showScreen('game-screen');
   renderGame();

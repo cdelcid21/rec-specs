@@ -15,33 +15,37 @@
 
 <!-- ══ HOME SCREEN ════════════════════════════ -->
 <div id="home-screen" class="view active">
-  <div class="home-header">
-    <h1>Rec Specs</h1>
+  <div class="home-hero">
+    <div class="home-brand">
+      <span class="home-brand-icon">&#9917;</span>
+      <h1 class="home-title">Rec Specs</h1>
+    </div>
+    <p class="home-tagline">Your lineup. Your call.</p>
   </div>
-  <div class="home-tiles">
-    <button class="home-tile tile-start"    id="btn-home-start">
-      <span class="tile-icon">&#9654;</span>
-      <span class="tile-label">Start Game</span>
+
+  <!-- Shown when roster has players -->
+  <div class="home-cta" id="home-cta">
+    <button class="btn-home-start" id="btn-home-start">
+      <span class="btn-home-start-icon">&#9654;</span>
+      Start Game
     </button>
-    <button class="home-tile tile-roster"   id="btn-home-roster">
-      <span class="tile-icon">&#128101;</span>
-      <span class="tile-label">Edit Roster</span>
-    </button>
-    <button class="home-tile tile-season"   id="btn-home-season">
-      <span class="tile-icon">&#128200;</span>
-      <span class="tile-label">Season Stats</span>
-    </button>
-    <button class="home-tile tile-practice" id="btn-home-practice">
-      <span class="tile-icon">&#9917;</span>
-      <span class="tile-label">Practice</span>
-    </button>
+    <p class="home-roster-count" id="home-roster-count"></p>
+  </div>
+
+  <!-- Shown when roster is empty -->
+  <div class="home-empty" id="home-empty">
+    <div class="home-empty-card">
+      <span class="home-empty-icon">&#128101;</span>
+      <p class="home-empty-title">Add your players first</p>
+      <p class="home-empty-sub">Tap Roster below to build your team</p>
+    </div>
   </div>
 </div>
 
 <!-- ══ SETUP SCREEN ══════════════════════════ -->
 <div id="setup-screen" class="view">
   <div class="setup-header">
-    <button class="btn-back-home" id="btn-back-home">&#8592;</button>
+    <button class="btn-back-home" id="btn-back-home" style="display:none">&#8592;</button>
     <h1>Rec Specs</h1>
     <p id="setup-count">Add players to your roster</p>
   </div>
@@ -172,7 +176,7 @@
 <!-- ══ DRILLS SCREEN ══════════════════════════ -->
 <div id="drills-screen" class="view">
   <div class="drills-header">
-    <button class="btn-back-home" id="btn-back-home-drills">&#8592;</button>
+    <button class="btn-back-home" id="btn-back-home-drills" style="display:none">&#8592;</button>
     <h1>Practice</h1>
   </div>
   <div class="drills-coming-soon">
@@ -181,6 +185,26 @@
     <p class="coming-soon-sub">AI-powered practice plans based on your season stats</p>
   </div>
 </div>
+
+<!-- ══ BOTTOM NAV ════════════════════════════ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="nav-tab active" id="nav-game" data-tab="game">
+    <span class="nav-icon">&#9654;</span>
+    <span class="nav-label">Game</span>
+  </button>
+  <button class="nav-tab" id="nav-roster" data-tab="roster">
+    <span class="nav-icon">&#128101;</span>
+    <span class="nav-label">Roster</span>
+  </button>
+  <button class="nav-tab" id="nav-stats" data-tab="stats">
+    <span class="nav-icon">&#128200;</span>
+    <span class="nav-label">Stats</span>
+  </button>
+  <button class="nav-tab nav-tab--muted" id="nav-practice" data-tab="practice">
+    <span class="nav-icon">&#9917;</span>
+    <span class="nav-label">Practice</span>
+  </button>
+</nav>
 
 <script src="app.js"></script>
 </body>

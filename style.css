@@ -7,6 +7,7 @@
   --gray:         #6b7280;
   --white:        #f5f5f5;
   --red:          #ef4444;
+  --nav-h:        60px;
 }
 
 * {
@@ -32,54 +33,146 @@ html, body {
 
 /* ── Home Screen ────────────────────────── */
 #home-screen {
-  padding: 48px 24px 32px;
-  justify-content: flex-start;
+  padding: max(52px, env(safe-area-inset-top)) 24px 0;
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 24px);
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
 }
 
-.home-header {
+.home-hero {
   text-align: center;
-  margin-bottom: 40px;
-}
-.home-header h1 {
-  font-size: 34px;
-  font-weight: 900;
-  letter-spacing: -1px;
-  color: var(--green-field);
-}
-
-.home-tiles {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  flex: 1;
+  align-items: center;
+  gap: 10px;
 }
-
-.home-tile {
+.home-brand {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
+}
+.home-brand-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.home-title {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  color: var(--white);
+}
+.home-tagline {
+  font-size: 14px;
+  color: var(--gray);
+  letter-spacing: 0.2px;
+}
+
+/* CTA block (shown when roster has players) */
+.home-cta {
   width: 100%;
-  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.btn-home-start {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--green-field);
+  color: white;
   border: none;
   border-radius: 16px;
+  padding: 20px 24px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
   cursor: pointer;
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
-  text-align: left;
-  flex-shrink: 0;
 }
-.tile-icon {
-  font-size: 26px;
+.btn-home-start:active { opacity: 0.8; }
+.btn-home-start-icon {
+  font-size: 17px;
   line-height: 1;
-  flex-shrink: 0;
 }
-.tile-label { flex: 1; }
+.home-roster-count {
+  font-size: 13px;
+  color: var(--gray);
+  letter-spacing: 0.2px;
+}
 
-.tile-start    { background: #16a34a; }
-.tile-roster   { background: #2563eb; }
-.tile-season   { background: #7c3aed; }
-.tile-practice { background: #d97706; }
+/* Empty state (shown when roster is empty) */
+.home-empty { width: 100%; }
+.home-empty-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.home-empty-icon {
+  font-size: 40px;
+  opacity: 0.5;
+  line-height: 1;
+}
+.home-empty-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--white);
+}
+.home-empty-sub {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+
+/* ── Bottom Nav ─────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+}
+.bottom-nav.hidden { display: none; }
+
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  padding: 6px 0 8px;
+  transition: color 0.15s;
+}
+.nav-tab.active { color: var(--green-field); }
+.nav-tab--muted { opacity: 0.4; cursor: default; }
+
+.nav-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
 
 /* ── Setup Screen ───────────────────────── */
 #setup-screen { padding: 28px 20px 0; }
@@ -137,7 +230,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding-bottom: 80px;
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 24px);
 }
 .coming-soon-icon {
   font-size: 64px;
@@ -283,7 +376,7 @@ html, body {
 .player-token { font-size: 11px; }
 
 .setup-footer {
-  padding: 16px 0 max(20px, env(safe-area-inset-bottom));
+  padding: 16px 0 calc(var(--nav-h) + 12px);
 }
 .btn-start {
   width: 100%;
