@@ -361,8 +361,33 @@ html, body {
 .btn-start:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-start:not(:disabled):active { opacity: 0.8; }
 
-/* ── Game Screen ────────────────────────── */
-#game-screen { overflow: hidden; }
+/* ── Game Screen (fixed bottom sheet) ──── */
+#game-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  transform: translateY(100%);
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#game-screen.sheet-visible {
+  transform: translateY(0);
+}
+#game-screen.sheet-hidden {
+  transform: translateY(100%);
+}
+
+/* Sheet drag handle */
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  margin: 0 auto 8px;
+  flex-shrink: 0;
+}
 
 /* Timer Bar */
 .timer-bar {
@@ -877,3 +902,70 @@ html, body {
 .bar-fw  { background: #38bdf8; height: 100%; flex-shrink: 0; }
 .bar-def { background: #a78bfa; height: 100%; flex-shrink: 0; }
 .bar-gk  { background: #fbbf24; height: 100%; flex-shrink: 0; }
+
+/* ── Game Mini Bar ──────────────────────── */
+#game-mini-bar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px);
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.25);
+  display: none;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 8px;
+  z-index: 150;
+  cursor: pointer;
+}
+#game-mini-bar.visible { display: flex; }
+
+.mini-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+#mini-half-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--gray);
+  background: var(--border);
+  border-radius: 5px;
+  padding: 3px 7px;
+}
+#mini-timer {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  color: var(--white);
+}
+.mini-bar-center {
+  flex: 1;
+  text-align: center;
+}
+#mini-phase {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+.mini-btn-action {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green-field);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mini-btn-action svg { width: 18px; height: 18px; }
+.mini-btn-action:active { opacity: 0.75; }

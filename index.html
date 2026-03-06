@@ -73,6 +73,7 @@
 <div id="game-screen" class="view">
 
   <div class="timer-bar">
+    <div class="sheet-handle"></div>
     <div class="timer-top">
       <div class="half-badge" id="half-badge"></div>
       <button class="btn-back-setup" id="btn-back-setup"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
@@ -218,6 +219,18 @@
 
 <!-- ══ FAB ════════════════════════════════════ -->
 <button class="fab" id="btn-fab" style="display:none">+</button>
+
+<!-- ══ GAME MINI BAR ══════════════════════════ -->
+<div id="game-mini-bar">
+  <div class="mini-bar-left">
+    <span id="mini-half-badge"></span>
+    <span id="mini-timer">00:00</span>
+  </div>
+  <div class="mini-bar-center">
+    <span id="mini-phase"></span>
+  </div>
+  <button id="mini-btn-action" class="mini-btn-action"></button>
+</div>
 
 <script src="app.js"></script>
 </body>

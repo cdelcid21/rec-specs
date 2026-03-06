@@ -91,16 +91,81 @@ const state = {
 // ─────────────────────────────────────────────
 //  NAVIGATION
 // ─────────────────────────────────────────────
+let gameMinimized = false;
+
+function minimizeGame() {
+  gameMinimized = true;
+  const gs = document.getElementById('game-screen');
+  gs.classList.remove('sheet-visible');
+  gs.classList.add('sheet-hidden');
+  document.getElementById('game-mini-bar').classList.add('visible');
+  document.getElementById('bottom-nav').classList.remove('hidden');
+  updateMiniBar();
+}
+
+function expandGame() {
+  gameMinimized = false;
+  const gs = document.getElementById('game-screen');
+  gs.classList.remove('sheet-hidden');
+  gs.classList.add('sheet-visible');
+  document.getElementById('game-mini-bar').classList.remove('visible');
+  document.getElementById('bottom-nav').classList.add('hidden');
+}
+
+function hideMiniBar() {
+  gameMinimized = false;
+  document.getElementById('game-mini-bar').classList.remove('visible');
+}
+
+function updateMiniBar() {
+  const { elapsed, phase, secondHalfActive } = state.timer;
+  const halfBadgeEl = document.getElementById('mini-half-badge');
+  const timerEl     = document.getElementById('mini-timer');
+  const phaseEl     = document.getElementById('mini-phase');
+  const btnEl       = document.getElementById('mini-btn-action');
+
+  halfBadgeEl.textContent = (phase === 'idle') ? '' : (secondHalfActive ? '2H' : '1H');
+  btnEl.style.display = '';
+
+  switch (phase) {
+    case 'idle':
+      timerEl.textContent = '00:00';
+      phaseEl.textContent = '';
+      btnEl.innerHTML = SVG_PLAY;
+      break;
+    case 'running':
+      timerEl.textContent = fmt(elapsed);
+      phaseEl.textContent = '';
+      btnEl.innerHTML = SVG_PAUSE;
+      break;
+    case 'paused':
+      timerEl.textContent = fmt(elapsed);
+      phaseEl.textContent = 'Paused';
+      btnEl.innerHTML = SVG_PLAY;
+      break;
+    case 'halftime':
+      timerEl.textContent = 'HALF';
+      phaseEl.textContent = '';
+      btnEl.innerHTML = SVG_PLAY;
+      break;
+    case 'fulltime':
+      timerEl.textContent = 'FULL';
+      phaseEl.textContent = '';
+      btnEl.style.display = 'none';
+      break;
+  }
+}
+
 function showScreen(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   const nav = document.getElementById('bottom-nav');
   const fab = document.getElementById('btn-fab');
   if (id === 'game-screen') {
-    nav.classList.add('hidden');
+    expandGame();
     fab.style.display = 'none';
   } else {
-    nav.classList.remove('hidden');
+    if (!gameMinimized) nav.classList.remove('hidden');
     fab.style.display = (id === 'home-screen' && roster.length > 0) || id === 'roster-screen'
       ? '' : 'none';
   }
@@ -426,6 +491,7 @@ function renderTimer() {
       btnAction.style.display = 'none';
       break;
   }
+  if (gameMinimized) updateMiniBar();
 }
 
 async function acquireWakeLock() {
@@ -465,6 +531,7 @@ function tick() {
     state.timer.phase = state.timer.secondHalfActive ? 'fulltime' : 'halftime';
     if (state.timer.phase === 'fulltime') saveSeasonGame();
     if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
+    if (gameMinimized) expandGame();
     setTimeout(() => showReport(state.timer.phase), REPORT_DELAY_MS);
   }
   renderTimer();
@@ -502,11 +569,13 @@ function doReset() {
     state.posTime[num]  = { fw:0, def:0, gk:0 };
   });
   clearSavedState();
+  hideMiniBar();
   renderTimer();
 }
 
 function goBackToSetup() {
   clearSavedState();
+  hideMiniBar();
   showScreen('game-setup-screen');
   renderGameSetup();
 }
@@ -1130,6 +1199,35 @@ function showReport(phase) {
 
   reportModal.classList.add('active');
 }
+
+// ─────────────────────────────────────────────
+//  GAME SHEET — swipe-down + mini bar
+// ─────────────────────────────────────────────
+const timerBarEl = document.querySelector('.timer-bar');
+let swipeStartY  = 0;
+let swipeStarted = false;
+
+timerBarEl.addEventListener('touchstart', e => {
+  swipeStartY  = e.touches[0].clientY;
+  swipeStarted = true;
+}, { passive: true });
+
+timerBarEl.addEventListener('touchend', e => {
+  if (!swipeStarted) return;
+  swipeStarted = false;
+  const dy = e.changedTouches[0].clientY - swipeStartY;
+  if (dy > 60) minimizeGame();
+});
+
+document.getElementById('game-mini-bar').addEventListener('click', e => {
+  if (e.target.closest('#mini-btn-action')) return;
+  expandGame();
+});
+
+document.getElementById('mini-btn-action').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('btn-action').click();
+});
 
 // ─────────────────────────────────────────────
 //  STARTUP — restore previous session if saved
