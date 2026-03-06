@@ -85,12 +85,14 @@ const state = {
 function showScreen(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  // Hide bottom nav during live game
   const nav = document.getElementById('bottom-nav');
+  const fab = document.getElementById('btn-fab');
   if (id === 'game-screen') {
     nav.classList.add('hidden');
+    fab.style.display = 'none';
   } else {
     nav.classList.remove('hidden');
+    fab.style.display = (id === 'home-screen' && roster.length > 0) ? '' : 'none';
   }
 }
 
@@ -98,13 +100,17 @@ function updateHomeScreen() {
   const cta   = document.getElementById('home-cta');
   const empty = document.getElementById('home-empty');
   const count = document.getElementById('home-roster-count');
+  const fab   = document.getElementById('btn-fab');
+  const isHome = document.getElementById('home-screen').classList.contains('active');
   if (roster.length === 0) {
     cta.style.display   = 'none';
     empty.style.display = '';
+    fab.style.display   = 'none';
   } else {
     cta.style.display   = '';
     empty.style.display = 'none';
     count.textContent   = roster.length + ' player' + (roster.length !== 1 ? 's' : '') + ' in roster';
+    fab.style.display   = isHome ? '' : 'none';
   }
 }
 
@@ -144,8 +150,8 @@ document.getElementById('nav-practice').addEventListener('click', () => {
   setActiveTab('practice');
 });
 
-// Home screen "Start Game" CTA → goes to game setup (fresh selection each time)
-document.getElementById('btn-home-start').addEventListener('click', () => {
+// FAB → goes to game setup (fresh selection each time)
+document.getElementById('btn-fab').addEventListener('click', () => {
   state.players = [];
   showScreen('game-setup-screen');
   renderGameSetup();
