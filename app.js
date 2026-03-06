@@ -128,21 +128,13 @@ document.getElementById('nav-game').addEventListener('click', () => {
 });
 
 document.getElementById('nav-roster').addEventListener('click', () => {
-  showScreen('setup-screen');
+  showScreen('roster-screen');
   setActiveTab('roster');
-  document.getElementById('tab-roster').classList.add('active');
-  document.getElementById('tab-season').classList.remove('active');
-  document.getElementById('panel-roster').style.display = '';
-  document.getElementById('panel-season').style.display = 'none';
 });
 
 document.getElementById('nav-stats').addEventListener('click', () => {
-  showScreen('setup-screen');
+  showScreen('stats-screen');
   setActiveTab('stats');
-  document.getElementById('tab-season').classList.add('active');
-  document.getElementById('tab-roster').classList.remove('active');
-  document.getElementById('panel-season').style.display = '';
-  document.getElementById('panel-roster').style.display = 'none';
   renderSeasonTab();
 });
 
@@ -151,17 +143,14 @@ document.getElementById('nav-practice').addEventListener('click', () => {
   setActiveTab('practice');
 });
 
-// Home screen "Start Game" CTA → goes to setup (roster tab)
+// Home screen "Start Game" CTA → goes to roster screen
 document.getElementById('btn-home-start').addEventListener('click', () => {
-  showScreen('setup-screen');
+  showScreen('roster-screen');
   setActiveTab('roster');
-  document.getElementById('tab-roster').classList.add('active');
-  document.getElementById('tab-season').classList.remove('active');
-  document.getElementById('panel-roster').style.display = '';
-  document.getElementById('panel-season').style.display = 'none';
 });
 
-document.getElementById('btn-back-home').addEventListener('click', goBackToHome);
+document.getElementById('btn-back-home-roster').addEventListener('click', goBackToHome);
+document.getElementById('btn-back-home-stats').addEventListener('click', goBackToHome);
 document.getElementById('btn-back-home-drills').addEventListener('click', goBackToHome);
 
 // ─────────────────────────────────────────────
@@ -237,25 +226,6 @@ btnAddPlayer.addEventListener('click', () => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter') btnAddPlayer.click(); });
 });
 
-const tabRoster   = document.getElementById('tab-roster');
-const tabSeason   = document.getElementById('tab-season');
-const panelRoster = document.getElementById('panel-roster');
-const panelSeason = document.getElementById('panel-season');
-
-tabRoster.addEventListener('click', () => {
-  tabRoster.classList.add('active');
-  tabSeason.classList.remove('active');
-  panelRoster.style.display = '';
-  panelSeason.style.display = 'none';
-});
-
-tabSeason.addEventListener('click', () => {
-  tabSeason.classList.add('active');
-  tabRoster.classList.remove('active');
-  panelRoster.style.display = 'none';
-  panelSeason.style.display = '';
-  renderSeasonTab();
-});
 
 function renderSeasonTab() {
   const el = document.getElementById('season-stats');
@@ -467,12 +437,8 @@ function doReset() {
 
 function goBackToSetup() {
   clearSavedState();
-  // Ensure Roster tab is active when returning
-  tabRoster.classList.add('active');
-  tabSeason.classList.remove('active');
-  panelRoster.style.display = '';
-  panelSeason.style.display = 'none';
-  showScreen('setup-screen');
+  showScreen('roster-screen');
+  setActiveTab('roster');
   renderSetup();
 }
 

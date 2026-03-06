@@ -174,8 +174,8 @@ html, body {
   letter-spacing: 0.3px;
 }
 
-/* ── Setup Screen ───────────────────────── */
-#setup-screen { padding: 28px 20px 0; }
+/* ── Roster & Stats Screens ─────────────── */
+#roster-screen, #stats-screen { padding: 28px 20px 0; }
 
 .setup-header {
   position: relative;
@@ -304,36 +304,6 @@ html, body {
   padding: 0 16px; cursor: pointer; flex-shrink: 0;
 }
 
-/* ── Setup Tabs ─────────────────────────── */
-.setup-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-.tab-btn {
-  flex: 1;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  color: var(--gray);
-  font-size: 14px;
-  font-weight: 700;
-  padding: 10px;
-  cursor: pointer;
-}
-.tab-btn.active {
-  background: var(--green-field);
-  border-color: var(--green-field);
-  color: white;
-}
-
-/* ── Season Panel ────────────────────────── */
-#panel-roster, #panel-season {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
 .season-stats {
   flex: 1;
   overflow-y: auto;
@@ -356,7 +326,7 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 .season-footer {
-  padding: 10px 0 6px;
+  padding: 10px 0 calc(var(--nav-h) + 6px);
   border-top: 1px solid var(--border);
 }
 .btn-clear-season {

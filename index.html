@@ -42,37 +42,33 @@
   </div>
 </div>
 
-<!-- ══ SETUP SCREEN ══════════════════════════ -->
-<div id="setup-screen" class="view">
+<!-- ══ ROSTER SCREEN ══════════════════════════ -->
+<div id="roster-screen" class="view">
   <div class="setup-header">
-    <button class="btn-back-home" id="btn-back-home" style="display:none">&#8592;</button>
+    <button class="btn-back-home" id="btn-back-home-roster" style="display:none">&#8592;</button>
     <h1>Rec Specs</h1>
     <p id="setup-count">Add players to your roster</p>
   </div>
-
-  <div class="setup-tabs">
-    <button class="tab-btn active" id="tab-roster">Roster</button>
-    <button class="tab-btn" id="tab-season">Season</button>
+  <div class="roster-list" id="roster-list"></div>
+  <div class="add-player-row">
+    <input class="add-input" type="text"   id="add-name" placeholder="Name"  maxlength="14">
+    <input class="add-input add-num" type="number" id="add-num"  placeholder="#" min="0" max="99">
+    <button class="btn-add" id="btn-add-player">+</button>
   </div>
-
-  <div id="panel-roster">
-    <div class="roster-list" id="roster-list"></div>
-    <div class="add-player-row">
-      <input class="add-input" type="text"   id="add-name" placeholder="Name"  maxlength="14">
-      <input class="add-input add-num" type="number" id="add-num"  placeholder="#" min="0" max="99">
-      <button class="btn-add" id="btn-add-player">+</button>
-    </div>
-  </div>
-
-  <div id="panel-season" style="display:none">
-    <div class="season-stats" id="season-stats"></div>
-    <div class="season-footer">
-      <button class="btn-clear-season" id="btn-clear-season">Clear Season</button>
-    </div>
-  </div>
-
   <div class="setup-footer">
     <button class="btn-start" id="btn-start-game" disabled>Start Game</button>
+  </div>
+</div>
+
+<!-- ══ STATS SCREEN ═══════════════════════════ -->
+<div id="stats-screen" class="view">
+  <div class="setup-header">
+    <button class="btn-back-home" id="btn-back-home-stats" style="display:none">&#8592;</button>
+    <h1>Season Stats</h1>
+  </div>
+  <div class="season-stats" id="season-stats"></div>
+  <div class="season-footer">
+    <button class="btn-clear-season" id="btn-clear-season">Clear Season</button>
   </div>
 </div>
 
