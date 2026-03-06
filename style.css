@@ -316,7 +316,7 @@ html, body {
   -webkit-appearance: none;
 }
 .add-input:focus { outline: none; border-color: var(--green-field); }
-.add-input.add-num { width: 64px; }
+.add-input.add-num { width: 72px; flex-shrink: 0; }
 .player-modal-inputs {
   display: flex;
   gap: 8px;
