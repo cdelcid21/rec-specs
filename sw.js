@@ -1,5 +1,5 @@
 // Bump VERSION on every deploy so users always receive the latest files.
-const VERSION = '2026-03-06.6';
+const VERSION = '2026-03-06.7';
 const CACHE   = `rec-specs-${VERSION}`;
 const ASSETS  = ['./', './index.html', './style.css', './app.js', './icon-192.png', './icon-512.png'];
 

@@ -969,3 +969,19 @@ html, body {
 }
 .mini-btn-action svg { width: 18px; height: 18px; }
 .mini-btn-action:active { opacity: 0.75; }
+.mini-btn-discard {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+}
+.mini-btn-discard svg { width: 16px; height: 16px; }
+.mini-btn-discard:active { opacity: 0.5; }

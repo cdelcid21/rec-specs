@@ -128,9 +128,13 @@ function updateMiniBar() {
   const timerEl     = document.getElementById('mini-timer');
   const phaseEl     = document.getElementById('mini-phase');
   const btnEl       = document.getElementById('mini-btn-action');
+  const discardEl   = document.getElementById('mini-btn-discard');
 
   halfBadgeEl.textContent = (phase === 'idle') ? '' : (secondHalfActive ? '2H' : '1H');
   btnEl.style.display = '';
+  discardEl.innerHTML = SVG_XMARK;
+  discardEl.style.display = (phase === 'running' || phase === 'paused' || phase === 'halftime')
+    ? '' : 'none';
 
   switch (phase) {
     case 'idle':
@@ -818,8 +822,9 @@ function placeOnField(num, origin, zone) {
 // ─────────────────────────────────────────────
 //  CONFIRMATION MODAL
 // ─────────────────────────────────────────────
-let pendingSub    = null;
-let pendingDelete = null;
+let pendingSub     = null;
+let pendingDelete  = null;
+let pendingDiscard = false;
 
 const confirmModal = document.getElementById('confirm-modal');
 const confirmText  = document.getElementById('confirm-text');
@@ -835,6 +840,13 @@ confirmYes.addEventListener('click', () => {
   confirmModal.classList.remove('active');
   document.getElementById('confirm-title').textContent = 'Make Sub?';
   document.getElementById('confirm-yes').textContent   = 'Sub In';
+
+  if (pendingDiscard) {
+    pendingDiscard = false;
+    doReset();
+    goBackToHome();
+    return;
+  }
 
   if (pendingDelete) {
     const num = pendingDelete;
@@ -865,8 +877,9 @@ confirmNo.addEventListener('click', () => {
   confirmModal.classList.remove('active');
   document.getElementById('confirm-title').textContent = 'Make Sub?';
   document.getElementById('confirm-yes').textContent   = 'Sub In';
-  pendingDelete = null;
-  pendingSub    = null;
+  pendingDiscard = false;
+  pendingDelete  = null;
+  pendingSub     = null;
 });
 
 // ─────────────────────────────────────────────
@@ -1226,7 +1239,17 @@ timerBarEl.addEventListener('touchend', e => {
 
 document.getElementById('game-mini-bar').addEventListener('click', e => {
   if (e.target.closest('#mini-btn-action')) return;
+  if (e.target.closest('#mini-btn-discard')) return;
   expandGame();
+});
+
+document.getElementById('mini-btn-discard').addEventListener('click', e => {
+  e.stopPropagation();
+  pendingDiscard = true;
+  document.getElementById('confirm-title').textContent = 'Abandon Game?';
+  confirmText.textContent = 'All progress and stats from this game will be lost.';
+  document.getElementById('confirm-yes').textContent = 'Abandon';
+  confirmModal.classList.add('active');
 });
 
 document.getElementById('mini-btn-action').addEventListener('click', e => {
