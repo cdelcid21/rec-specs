@@ -360,29 +360,6 @@ function renderSeasonTab() {
   });
 }
 
-// Clear season — two-tap confirmation
-let clearSeasonPending = false;
-let clearSeasonTimer   = null;
-const btnClearSeason = document.getElementById('btn-clear-season');
-
-btnClearSeason.addEventListener('click', () => {
-  if (clearSeasonPending) {
-    clearTimeout(clearSeasonTimer);
-    clearSeasonPending = false;
-    btnClearSeason.textContent = 'Clear Season';
-    season = [];
-    try { localStorage.removeItem(SEASON_KEY); } catch (_) {}
-    renderSeasonTab();
-  } else {
-    clearSeasonPending = true;
-    btnClearSeason.textContent = 'Tap again to confirm';
-    clearSeasonTimer = setTimeout(() => {
-      clearSeasonPending = false;
-      btnClearSeason.textContent = 'Clear Season';
-    }, 3000);
-  }
-});
-
 btnStartGame.addEventListener('click', () => {
   state.subs = [...state.players];
   ZONES.forEach(z => state.field[z] = null);
