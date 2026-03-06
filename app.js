@@ -58,6 +58,8 @@ function saveSeasonGame() {
     posTime:  Object.fromEntries(
       state.players.map(n => [n, { ...(state.posTime[n] || { fw:0, def:0, gk:0 }) }])
     ),
+    score: { ...state.score },
+    date:  Date.now(),
   });
   try { localStorage.setItem(SEASON_KEY, JSON.stringify(season)); } catch (_) {}
 }
@@ -86,6 +88,7 @@ const state = {
   wakeLock: null,
   playTime: {}, // { jerseyNum: seconds } — cumulative on-field time per player
   posTime:  {}, // { jerseyNum: { fw:0, def:0, gk:0 } } — time by position group
+  score:    { us: 0, them: 0 },
 };
 
 // ─────────────────────────────────────────────
@@ -136,6 +139,9 @@ function updateMiniBar() {
   discardEl.style.display = (phase === 'running' || phase === 'paused' || phase === 'halftime')
     ? '' : 'none';
 
+  const { us, them } = state.score;
+  const scoreStr = (us || them) ? `${us} — ${them}` : '';
+
   switch (phase) {
     case 'idle':
       timerEl.textContent = '00:00';
@@ -144,22 +150,22 @@ function updateMiniBar() {
       break;
     case 'running':
       timerEl.textContent = fmt(elapsed);
-      phaseEl.textContent = '';
+      phaseEl.textContent = scoreStr;
       btnEl.innerHTML = SVG_PAUSE;
       break;
     case 'paused':
       timerEl.textContent = fmt(elapsed);
-      phaseEl.textContent = 'Paused';
+      phaseEl.textContent = scoreStr || 'Paused';
       btnEl.innerHTML = SVG_PLAY;
       break;
     case 'halftime':
       timerEl.textContent = 'HALF';
-      phaseEl.textContent = '';
+      phaseEl.textContent = scoreStr;
       btnEl.innerHTML = SVG_PLAY;
       break;
     case 'fulltime':
       timerEl.textContent = 'FULL';
-      phaseEl.textContent = '';
+      phaseEl.textContent = scoreStr;
       btnEl.style.display = 'none';
       break;
   }
@@ -180,6 +186,80 @@ function showScreen(id) {
   }
 }
 
+function renderHomeGames() {
+  const el = document.getElementById('home-games');
+  if (!season.length) { el.innerHTML = ''; return; }
+  const header = `<div class="home-section-label">Recent Games</div>`;
+  const cards  = [...season].reverse().map((game, revIdx) => {
+    const i      = season.length - 1 - revIdx; // original index for detail lookup
+    const num    = i + 1;
+    const date   = game.date ? new Date(game.date).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '';
+    const score  = game.score ? `${game.score.us} — ${game.score.them}` : '';
+    const pCount = game.players.length;
+    return `
+      <div class="game-card" data-index="${i}">
+        <div class="game-card-left">
+          <span class="game-card-num">Game ${num}</span>
+          ${date ? `<span class="game-card-date">${date}</span>` : ''}
+        </div>
+        <div class="game-card-center">
+          ${score ? `<span class="game-card-score">${score}</span>` : ''}
+        </div>
+        <div class="game-card-right">
+          <span class="game-card-players">${pCount} player${pCount !== 1 ? 's' : ''}</span>
+          <svg class="game-card-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+        </div>
+      </div>`;
+  }).join('');
+  el.innerHTML = header + cards;
+  el.querySelectorAll('.game-card').forEach(card => {
+    card.addEventListener('click', () => showGameDetail(+card.dataset.index));
+  });
+}
+
+function showGameDetail(index) {
+  const game  = season[index];
+  const num   = index + 1;
+  const date  = game.date ? new Date(game.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
+  document.getElementById('game-detail-title').textContent = `Game ${num}${date ? ' · ' + date : ''}`;
+  const scoreEl = document.getElementById('game-detail-score');
+  if (game.score) {
+    scoreEl.textContent = `${game.score.us} — ${game.score.them}`;
+    scoreEl.style.display = '';
+  } else {
+    scoreEl.style.display = 'none';
+  }
+
+  const list = document.getElementById('game-detail-list');
+  list.innerHTML = '';
+  const maxTime = HALF * 2;
+  const sorted  = [...game.players].sort((a, b) => (game.playTime[b] || 0) - (game.playTime[a] || 0));
+  sorted.forEach(n => {
+    const total = game.playTime[n] || 0;
+    const pos   = game.posTime[n]  || { fw:0, def:0, gk:0 };
+    const fwW   = (pos.fw  / maxTime * 100).toFixed(1);
+    const defW  = (pos.def / maxTime * 100).toFixed(1);
+    const gkW   = (pos.gk  / maxTime * 100).toFixed(1);
+    const row   = document.createElement('div');
+    row.className = 'report-row';
+    row.innerHTML = `
+      <div class="report-name">${playerName(n)}</div>
+      <div class="report-jersey">#${n}</div>
+      <div class="report-time">${fmtPlayTime(total)}</div>
+      <div class="report-bar-outer">
+        <div class="bar-fw"  style="width:${fwW}%"></div>
+        <div class="bar-def" style="width:${defW}%"></div>
+        <div class="bar-gk"  style="width:${gkW}%"></div>
+      </div>`;
+    list.appendChild(row);
+  });
+  document.getElementById('game-detail-modal').classList.add('active');
+}
+
+document.getElementById('game-detail-close').addEventListener('click', () => {
+  document.getElementById('game-detail-modal').classList.remove('active');
+});
+
 function updateHomeScreen() {
   const cta   = document.getElementById('home-cta');
   const empty = document.getElementById('home-empty');
@@ -197,6 +277,7 @@ function updateHomeScreen() {
     count.textContent   = roster.length + ' player' + (roster.length !== 1 ? 's' : '') + ' in roster';
     if (!isRoster) fab.style.display = isHome && !gameMinimized ? '' : 'none';
   }
+  renderHomeGames();
 }
 
 function goBackToHome() {
@@ -458,6 +539,7 @@ btnStartGame.addEventListener('click', () => {
   ZONES.forEach(z => state.field[z] = null);
   state.playTime = {};
   state.posTime  = {};
+  state.score    = { us: 0, them: 0 };
   state.players.forEach(num => {
     state.playTime[num] = 0;
     state.posTime[num]  = { fw:0, def:0, gk:0 };
@@ -591,6 +673,7 @@ function doReset() {
     state.playTime[num] = 0;
     state.posTime[num]  = { fw:0, def:0, gk:0 };
   });
+  state.score = { us: 0, them: 0 };
   clearSavedState();
   hideMiniBar();
   renderTimer();
@@ -665,10 +748,38 @@ btnSkipBack.addEventListener('touchcancel', () => {
 // ─────────────────────────────────────────────
 //  RENDER
 // ─────────────────────────────────────────────
+function renderScore() {
+  document.getElementById('score-us').textContent   = state.score.us;
+  document.getElementById('score-them').textContent = state.score.them;
+}
+
+function wireScoreButton(btnId, team) {
+  const btn = document.getElementById(btnId);
+  let holdTimer = null;
+  btn.addEventListener('touchstart', () => {
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      state.score[team] = Math.max(0, state.score[team] - 1);
+      renderScore(); saveState();
+    }, 500);
+  }, { passive: true });
+  btn.addEventListener('touchend', () => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+      state.score[team]++;
+      renderScore(); saveState();
+    }
+  });
+}
+wireScoreButton('btn-score-us',   'us');
+wireScoreButton('btn-score-them', 'them');
+
 function renderGame() {
   renderField();
   renderSubs();
   renderTimer();
+  renderScore();
   saveState();
 }
 
@@ -1143,13 +1254,13 @@ document.getElementById('report-close').addEventListener('click', () => {
 //  PERSISTENCE
 // ─────────────────────────────────────────────
 function saveState() {
-  const { players, field, subs, timer, playTime, posTime } = state;
+  const { players, field, subs, timer, playTime, posTime, score } = state;
   const { elapsed, phase, secondHalfActive } = timer;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       players, field, subs,
       timer: { elapsed, phase, secondHalfActive },
-      playTime, posTime,
+      playTime, posTime, score,
     }));
   } catch (_) {}
 }
@@ -1173,6 +1284,7 @@ function restoreState() {
   state.subs     = saved.subs     || [];
   state.playTime = saved.playTime || {};
   state.posTime  = saved.posTime  || {};
+  state.score    = saved.score    || { us: 0, them: 0 };
 
   const t = saved.timer || {};
   state.timer.elapsed          = t.elapsed          || 0;

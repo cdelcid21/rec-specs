@@ -36,6 +36,9 @@
       <p class="home-empty-sub">Tap Roster below to build your team</p>
     </div>
   </div>
+
+  <!-- Past game cards -->
+  <div class="home-games" id="home-games"></div>
 </div>
 
 <!-- ══ ROSTER SCREEN ══════════════════════════ -->
@@ -84,6 +87,17 @@
       <button class="btn-ctrl-skip" id="btn-skip-back" disabled>−30s</button>
       <button class="btn-ctrl-play" id="btn-action"></button>
       <button class="btn-ctrl-skip" id="btn-skip-fwd" disabled>+30s</button>
+    </div>
+    <div class="score-row">
+      <button class="score-side" id="btn-score-us">
+        <span class="score-label">US</span>
+        <span class="score-num" id="score-us">0</span>
+      </button>
+      <span class="score-dash">—</span>
+      <button class="score-side" id="btn-score-them">
+        <span class="score-num" id="score-them">0</span>
+        <span class="score-label">THEM</span>
+      </button>
     </div>
   </div>
 
@@ -234,6 +248,21 @@
 </div>
 
 <div id="roster-toast"></div>
+
+<!-- ══ GAME DETAIL MODAL ══════════════════════ -->
+<div class="modal-overlay" id="game-detail-modal">
+  <div class="modal-box report-box">
+    <div class="report-title" id="game-detail-title"></div>
+    <div class="game-detail-score" id="game-detail-score"></div>
+    <div class="report-legend">
+      <span class="leg-fw">FWD</span>
+      <span class="leg-def">DEF</span>
+      <span class="leg-gk">GK</span>
+    </div>
+    <div class="report-list" id="game-detail-list"></div>
+    <button id="game-detail-close" class="btn-modal no" style="margin-top:16px;width:100%">Close</button>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
