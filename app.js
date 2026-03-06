@@ -26,6 +26,11 @@ const STORAGE_KEY        = 'rec-specs-state'; // localStorage key for session pe
 const ROSTER_KEY         = 'rec-specs-roster';
 const SEASON_KEY         = 'rec-specs-season';
 
+// ── Icon SVGs (Heroicons outline) ──────────────
+const SVG_PLAY  = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 0 1 0 1.971l-11.54 6.347a1.125 1.125 0 0 1-1.667-.985V5.653Z"/></svg>`;
+const SVG_PAUSE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>`;
+const SVG_XMARK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>`;
+
 let roster = []; // persistent player list: [{ num, name }]
 let season = [];
 
@@ -183,7 +188,7 @@ function renderRoster() {
     item.innerHTML = `
       <span class="roster-name">${name}</span>
       <span class="roster-num">#${num}</span>
-      <button class="roster-remove" data-num="${num}">✕</button>`;
+      <button class="roster-remove" data-num="${num}">${SVG_XMARK}</button>`;
     rosterList.appendChild(item);
   });
 
@@ -412,15 +417,15 @@ function renderTimer() {
   switch (phase) {
     case 'idle':
       timerDisplay.textContent = '00:00';
-      btnAction.textContent = '▶';
+      btnAction.innerHTML = SVG_PLAY;
       break;
     case 'running':
       timerDisplay.textContent = fmt(elapsed);
-      btnAction.textContent = '⏸';
+      btnAction.innerHTML = SVG_PAUSE;
       break;
     case 'paused':
       timerDisplay.textContent = fmt(elapsed);
-      btnAction.textContent = '▶';
+      btnAction.innerHTML = SVG_PLAY;
       break;
     case 'halftime':
       timerDisplay.classList.add('alert', 'small-label');

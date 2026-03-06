@@ -53,9 +53,10 @@ html, body {
   gap: 10px;
 }
 .home-brand-icon {
-  font-size: 28px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
 }
+.home-brand-icon svg { width: 28px; height: 28px; }
 .home-title {
   font-size: 36px;
   font-weight: 900;
@@ -118,10 +119,9 @@ html, body {
   gap: 10px;
 }
 .home-empty-icon {
-  font-size: 40px;
   opacity: 0.5;
-  line-height: 1;
 }
+.home-empty-icon svg { width: 40px; height: 40px; }
 .home-empty-title {
   font-size: 17px;
   font-weight: 700;
@@ -166,9 +166,11 @@ html, body {
 .nav-tab--muted { opacity: 0.4; cursor: default; }
 
 .nav-icon {
-  font-size: 22px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.nav-icon svg { width: 22px; height: 22px; }
 .nav-label {
   font-size: 10px;
   font-weight: 700;
@@ -203,11 +205,13 @@ html, body {
   background: transparent;
   border: none;
   color: var(--gray);
-  font-size: 22px;
   cursor: pointer;
   padding: 4px 8px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.btn-back-home svg { width: 20px; height: 20px; }
 
 /* ── Drills Screen ──────────────────────── */
 #drills-screen { padding: 28px 20px 0; }
@@ -234,9 +238,9 @@ html, body {
   padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 24px);
 }
 .coming-soon-icon {
-  font-size: 64px;
   opacity: 0.5;
 }
+.coming-soon-icon svg { width: 64px; height: 64px; }
 .drills-coming-soon p {
   font-size: 18px;
   font-weight: 700;
@@ -283,8 +287,10 @@ html, body {
 .roster-num  { font-size: 12px; color: var(--gray); }
 .roster-remove {
   background: transparent; border: none;
-  color: var(--gray); font-size: 14px; cursor: pointer; padding: 4px 8px;
+  color: var(--gray); cursor: pointer; padding: 4px 8px;
+  display: flex; align-items: center; justify-content: center;
 }
+.roster-remove svg { width: 16px; height: 16px; }
 
 /* ── Player Modal Inputs ────────────────── */
 .add-input {
@@ -405,13 +411,14 @@ html, body {
   background: var(--green-field);
   color: white;
   border: none;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.btn-ctrl-play svg { width: 22px; height: 22px; }
 .btn-ctrl-play:active { opacity: 0.75; }
 .btn-ctrl-skip {
   background: transparent;
@@ -433,11 +440,13 @@ html, body {
   border: 1.5px solid var(--border);
   border-radius: 8px;
   color: var(--gray);
-  font-size: 16px;
   padding: 6px 10px;
   cursor: pointer;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.btn-ctrl-draw svg { width: 18px; height: 18px; }
 .btn-ctrl-draw:active { opacity: 0.75; }
 .btn-ctrl-draw.active {
   border-color: rgba(250,204,21,0.7);
@@ -466,12 +475,13 @@ html, body {
   border: 1.5px solid var(--border);
   border-radius: 6px;
   color: var(--gray);
-  font-size: 16px;
-  font-weight: 800;
   padding: 6px 10px;
   cursor: pointer;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.btn-back-setup svg { width: 18px; height: 18px; }
 .btn-back-setup:active { opacity: 0.75; }
 
 /* Field Wrapper */
