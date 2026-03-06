@@ -45,9 +45,8 @@
 <!-- ══ ROSTER SCREEN ══════════════════════════ -->
 <div id="roster-screen" class="view">
   <div class="setup-header">
-    <button class="btn-back-home" id="btn-back-home-roster" style="display:none">&#8592;</button>
     <h1>Rec Specs</h1>
-    <p id="setup-count">Add players to your roster</p>
+    <p id="roster-count">Add players to your roster</p>
   </div>
   <div class="roster-list" id="roster-list"></div>
   <div class="add-player-row">
@@ -55,6 +54,16 @@
     <input class="add-input add-num" type="number" id="add-num"  placeholder="#" min="0" max="99">
     <button class="btn-add" id="btn-add-player">+</button>
   </div>
+</div>
+
+<!-- ══ GAME SETUP SCREEN ══════════════════════ -->
+<div id="game-setup-screen" class="view">
+  <div class="setup-header">
+    <button class="btn-back-home" id="btn-back-home-gamesetup">&#8592;</button>
+    <h1>Who's Here?</h1>
+    <p id="game-setup-count">Select players for today</p>
+  </div>
+  <div class="roster-list" id="game-setup-list"></div>
   <div class="setup-footer">
     <button class="btn-start" id="btn-start-game" disabled>Start Game</button>
   </div>

@@ -174,8 +174,8 @@ html, body {
   letter-spacing: 0.3px;
 }
 
-/* ── Roster & Stats Screens ─────────────── */
-#roster-screen, #stats-screen { padding: 28px 20px 0; }
+/* ── Roster, Game Setup & Stats Screens ─── */
+#roster-screen, #game-setup-screen, #stats-screen { padding: 28px 20px 0; }
 
 .setup-header {
   position: relative;

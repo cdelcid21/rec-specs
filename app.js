@@ -130,6 +130,7 @@ document.getElementById('nav-game').addEventListener('click', () => {
 document.getElementById('nav-roster').addEventListener('click', () => {
   showScreen('roster-screen');
   setActiveTab('roster');
+  renderRoster();
 });
 
 document.getElementById('nav-stats').addEventListener('click', () => {
@@ -143,51 +144,36 @@ document.getElementById('nav-practice').addEventListener('click', () => {
   setActiveTab('practice');
 });
 
-// Home screen "Start Game" CTA → goes to roster screen
+// Home screen "Start Game" CTA → goes to game setup (fresh selection each time)
 document.getElementById('btn-home-start').addEventListener('click', () => {
-  showScreen('roster-screen');
-  setActiveTab('roster');
+  state.players = [];
+  showScreen('game-setup-screen');
+  renderGameSetup();
 });
 
-document.getElementById('btn-back-home-roster').addEventListener('click', goBackToHome);
 document.getElementById('btn-back-home-stats').addEventListener('click', goBackToHome);
 document.getElementById('btn-back-home-drills').addEventListener('click', goBackToHome);
+document.getElementById('btn-back-home-gamesetup').addEventListener('click', goBackToHome);
 
 // ─────────────────────────────────────────────
-//  SETUP SCREEN
+//  ROSTER SCREEN  (management: add / delete)
 // ─────────────────────────────────────────────
-const setupCount   = document.getElementById('setup-count');
-const btnStartGame = document.getElementById('btn-start-game');
 const rosterList   = document.getElementById('roster-list');
 const addNameEl    = document.getElementById('add-name');
 const addNumEl     = document.getElementById('add-num');
 const btnAddPlayer = document.getElementById('btn-add-player');
 
-function renderSetup() {
+function renderRoster() {
+  const rosterCount = document.getElementById('roster-count');
   rosterList.innerHTML = '';
   roster.forEach(({ num, name }) => {
     const item = document.createElement('div');
     item.className = 'roster-item';
-    const isIn = state.players.includes(num);
-
     item.innerHTML = `
-      <button class="roster-check ${isIn ? 'checked' : ''}" data-num="${num}"></button>
       <span class="roster-name">${name}</span>
       <span class="roster-num">#${num}</span>
       <button class="roster-remove" data-num="${num}">✕</button>`;
     rosterList.appendChild(item);
-  });
-
-  rosterList.querySelectorAll('.roster-check').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const num = btn.dataset.num;
-      if (state.players.includes(num)) {
-        state.players = state.players.filter(p => p !== num);
-      } else {
-        state.players.push(num);
-      }
-      renderSetup();
-    });
   });
 
   rosterList.querySelectorAll('.roster-remove').forEach(btn => {
@@ -197,15 +183,13 @@ function renderSetup() {
       state.players = state.players.filter(p => p !== num);
       saveRoster();
       updateHomeScreen();
-      renderSetup();
+      renderRoster();
     });
   });
 
-  const n = state.players.length;
-  setupCount.textContent = roster.length === 0
+  rosterCount.textContent = roster.length === 0
     ? 'Add players to your roster'
-    : `${n} of ${roster.length} player${roster.length !== 1 ? 's' : ''} selected`;
-  btnStartGame.disabled = n < 1;
+    : `${roster.length} player${roster.length !== 1 ? 's' : ''} on your roster`;
 }
 
 btnAddPlayer.addEventListener('click', () => {
@@ -218,13 +202,52 @@ btnAddPlayer.addEventListener('click', () => {
   updateHomeScreen();
   addNameEl.value = '';
   addNumEl.value  = '';
-  renderSetup();
+  renderRoster();
 });
 
 // Allow pressing Enter in either input to add the player
 [addNameEl, addNumEl].forEach(el => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter') btnAddPlayer.click(); });
 });
+
+// ─────────────────────────────────────────────
+//  GAME SETUP SCREEN  (attendance: select who showed up)
+// ─────────────────────────────────────────────
+const gameSetupList  = document.getElementById('game-setup-list');
+const gameSetupCount = document.getElementById('game-setup-count');
+const btnStartGame   = document.getElementById('btn-start-game');
+
+function renderGameSetup() {
+  gameSetupList.innerHTML = '';
+  roster.forEach(({ num, name }) => {
+    const item = document.createElement('div');
+    item.className = 'roster-item';
+    const isIn = state.players.includes(num);
+    item.innerHTML = `
+      <button class="roster-check ${isIn ? 'checked' : ''}" data-num="${num}"></button>
+      <span class="roster-name">${name}</span>
+      <span class="roster-num">#${num}</span>`;
+    gameSetupList.appendChild(item);
+  });
+
+  gameSetupList.querySelectorAll('.roster-check').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const num = btn.dataset.num;
+      if (state.players.includes(num)) {
+        state.players = state.players.filter(p => p !== num);
+      } else {
+        state.players.push(num);
+      }
+      renderGameSetup();
+    });
+  });
+
+  const n = state.players.length;
+  gameSetupCount.textContent = n === 0
+    ? 'Select players for today'
+    : `${n} of ${roster.length} player${roster.length !== 1 ? 's' : ''} selected`;
+  btnStartGame.disabled = n < 1;
+}
 
 
 function renderSeasonTab() {
@@ -437,9 +460,8 @@ function doReset() {
 
 function goBackToSetup() {
   clearSavedState();
-  showScreen('roster-screen');
-  setActiveTab('roster');
-  renderSetup();
+  showScreen('game-setup-screen');
+  renderGameSetup();
 }
 
 btnBackSetup.addEventListener('click', goBackToSetup);
@@ -942,7 +964,7 @@ document.getElementById('report-close').addEventListener('click', () => {
   reportModal.classList.remove('active');
   if (state.timer.phase === 'fulltime') {
     doReset();
-    goBackToSetup();
+    goBackToHome();
   }
 });
 
@@ -1044,7 +1066,7 @@ function showReport(phase) {
 // ─────────────────────────────────────────────
 loadRoster();       // load roster first
 loadSeason();       // load season data
-renderSetup();      // draw setup screen (empty roster or saved one)
+renderRoster();     // populate roster management screen
 updateHomeScreen(); // set adaptive home state based on roster
 if (restoreState()) {
   showScreen('game-screen');
