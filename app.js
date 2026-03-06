@@ -328,7 +328,7 @@ document.getElementById('btn-fab').addEventListener('click', () => {
   if (active && active.id === 'roster-screen') {
     openPlayerModal('add');
   } else {
-    state.players = [];
+    state.players = roster.map(p => p.num);
     showScreen('game-setup-screen');
     renderGameSetup();
   }
