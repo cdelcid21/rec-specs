@@ -647,6 +647,13 @@ function tick() {
     state.timer.interval = null;
     releaseWakeLock();
     state.timer.phase = state.timer.secondHalfActive ? 'fulltime' : 'halftime';
+    if (state.timer.phase === 'halftime') {
+      const gkNum = state.field['gk'];
+      if (gkNum !== null) {
+        state.field['gk'] = null;
+        if (!state.subs.includes(gkNum)) state.subs.push(gkNum);
+      }
+    }
     if (state.timer.phase === 'fulltime') saveSeasonGame();
     if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
     if (gameMinimized) expandGame();
