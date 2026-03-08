@@ -659,6 +659,10 @@ function tick() {
 btnAction.addEventListener('click', () => {
   const { phase } = state.timer;
   if (phase === 'idle' || phase === 'paused') {
+    if (phase === 'idle' && !ZONES.every(z => state.field[z] !== null)) {
+      showRosterToast('Fill all 7 positions before starting');
+      return;
+    }
     state.timer.phase = 'running';
     state.timer.interval = setInterval(tick, 1000);
     acquireWakeLock();
@@ -668,6 +672,10 @@ btnAction.addEventListener('click', () => {
     state.timer.phase = 'paused';
     releaseWakeLock();
   } else if (phase === 'halftime') {
+    if (!ZONES.every(z => state.field[z] !== null)) {
+      showRosterToast('Fill all 7 positions before starting 2nd half');
+      return;
+    }
     state.timer.elapsed = 0;
     state.timer.secondHalfActive = true;
     state.timer.phase = 'running';
