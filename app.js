@@ -58,9 +58,11 @@ function saveSeasonGame() {
     posTime:  Object.fromEntries(
       state.players.map(n => [n, { ...(state.posTime[n] || { fw:0, def:0, gk:0 }) }])
     ),
+    gkHalves: [state.gkFirstHalf, state.field['gk']].filter(Boolean),
     score: { ...state.score },
     date:  Date.now(),
   });
+  state.gkFirstHalf = null;
   try { localStorage.setItem(SEASON_KEY, JSON.stringify(season)); } catch (_) {}
 }
 
@@ -98,6 +100,7 @@ const state = {
   playTime: {}, // { jerseyNum: seconds } — cumulative on-field time per player
   posTime:  {}, // { jerseyNum: { fw:0, def:0, gk:0 } } — time by position group
   score:    { us: 0, them: 0 },
+  gkFirstHalf: null, // jersey num of the 1H GK; set at halftime before auto-bench
 };
 
 // ─────────────────────────────────────────────
@@ -241,25 +244,36 @@ function showGameDetail(index) {
 
   const list = document.getElementById('game-detail-list');
   list.innerHTML = '';
-  const maxTime = HALF * 2;
-  const sorted  = [...game.players].sort((a, b) => (game.playTime[b] || 0) - (game.playTime[a] || 0));
+  const sorted = [...game.players].sort((a, b) => {
+    const posA = game.posTime[a] || { fw:0, def:0, gk:0 };
+    const posB = game.posTime[b] || { fw:0, def:0, gk:0 };
+    return (posB.fw + posB.def) - (posA.fw + posA.def);
+  });
   sorted.forEach(n => {
-    const total = game.playTime[n] || 0;
-    const pos   = game.posTime[n]  || { fw:0, def:0, gk:0 };
-    const fwW   = (pos.fw  / maxTime * 100).toFixed(1);
-    const defW  = (pos.def / maxTime * 100).toFixed(1);
-    const gkW   = (pos.gk  / maxTime * 100).toFixed(1);
-    const row   = document.createElement('div');
+    const pos       = game.posTime[n] || { fw:0, def:0, gk:0 };
+    const fieldTime = pos.fw + pos.def;
+
+    let barHTML;
+    if (fieldTime > 0) {
+      const fwW  = (pos.fw  / fieldTime * 100).toFixed(1);
+      const defW = (pos.def / fieldTime * 100).toFixed(1);
+      barHTML = `<div class="report-bar-outer">
+        <div class="bar-fw"  style="width:${fwW}%"></div>
+        <div class="bar-def" style="width:${defW}%"></div>
+      </div>`;
+    } else {
+      barHTML = `<div class="report-bar-outer"><span class="report-gk-label">GK</span></div>`;
+    }
+
+    const gkCount = (game.gkHalves || []).filter(k => k === n).length;
+    const row = document.createElement('div');
     row.className = 'report-row';
     row.innerHTML = `
       <div class="report-name">${escHtml(playerName(n))}</div>
       <div class="report-jersey">#${n}</div>
-      <div class="report-time">${fmtPlayTime(total)}</div>
-      <div class="report-bar-outer">
-        <div class="bar-fw"  style="width:${fwW}%"></div>
-        <div class="bar-def" style="width:${defW}%"></div>
-        <div class="bar-gk"  style="width:${gkW}%"></div>
-      </div>`;
+      <div class="report-time">${fieldTime > 0 ? fmtPlayTime(fieldTime) : '—'}</div>
+      ${barHTML}
+      ${gkCount > 0 ? `<span class="report-gk-badge">GK ×${gkCount}</span>` : ''}`;
     list.appendChild(row);
   });
   document.getElementById('game-detail-modal').classList.add('active');
@@ -509,40 +523,56 @@ function renderSeasonTab() {
     return;
   }
 
-  // Aggregate play time + position time per player across all games
+  // Aggregate position time + GK halves per player across all games
   const totals = {};
   season.forEach(game => {
     game.players.forEach(num => {
-      if (!totals[num]) totals[num] = { time:0, fw:0, def:0, gk:0, games:0 };
-      totals[num].time  += game.playTime[num] || 0;
+      if (!totals[num]) totals[num] = { fw:0, def:0, gk:0, games:0, gkHalves:0 };
       const pt = game.posTime[num] || {};
-      totals[num].fw   += pt.fw  || 0;
-      totals[num].def  += pt.def || 0;
-      totals[num].gk   += pt.gk  || 0;
+      totals[num].fw       += pt.fw  || 0;
+      totals[num].def      += pt.def || 0;
+      totals[num].gk       += pt.gk  || 0;
       totals[num].games++;
+      totals[num].gkHalves += (game.gkHalves || []).filter(n => n === num).length;
     });
   });
 
-  // Sort most → least time
-  const sorted = Object.entries(totals).sort((a, b) => b[1].time - a[1].time);
+  // Sort most → least avg field time per non-GK half
+  const sorted = Object.entries(totals).sort((a, b) => {
+    const fhA = a[1].games * 2 - a[1].gkHalves;
+    const fhB = b[1].games * 2 - b[1].gkHalves;
+    const avgA = fhA > 0 ? (a[1].fw + a[1].def) / fhA : 0;
+    const avgB = fhB > 0 ? (b[1].fw + b[1].def) / fhB : 0;
+    return avgB - avgA;
+  });
 
   el.innerHTML = `<div class="season-games-count">${season.length} game${season.length !== 1 ? 's' : ''} played</div>`;
   sorted.forEach(([num, data]) => {
-    const playerMaxTime = data.games * HALF * 2; // max possible for games this player was in
-    const fwW  = (data.fw  / playerMaxTime * 100).toFixed(1);
-    const defW = (data.def / playerMaxTime * 100).toFixed(1);
-    const gkW  = (data.gk  / playerMaxTime * 100).toFixed(1);
-    const row  = document.createElement('div');
+    const fieldHalves = data.games * 2 - data.gkHalves;
+    const fieldTime   = data.fw + data.def;
+
+    let timeLabel, barHTML;
+    if (fieldHalves > 0) {
+      timeLabel = fmtPlayTime(Math.round(fieldTime / fieldHalves)) + '/half';
+      const fwW  = fieldTime > 0 ? (data.fw / fieldTime * 100).toFixed(1) : '50';
+      const defW = fieldTime > 0 ? (data.def / fieldTime * 100).toFixed(1) : '50';
+      barHTML = `<div class="report-bar-outer">
+        <div class="bar-fw"  style="width:${fwW}%"></div>
+        <div class="bar-def" style="width:${defW}%"></div>
+      </div>`;
+    } else {
+      timeLabel = '—';
+      barHTML = `<div class="report-bar-outer"><span class="report-gk-label">GK</span></div>`;
+    }
+
+    const row = document.createElement('div');
     row.className = 'report-row';
     row.innerHTML = `
       <div class="report-name">${escHtml(playerName(num))}</div>
       <div class="report-jersey">#${num}</div>
-      <div class="report-time">${fmtPlayTime(data.time)}</div>
-      <div class="report-bar-outer">
-        <div class="bar-fw"  style="width:${fwW}%"></div>
-        <div class="bar-def" style="width:${defW}%"></div>
-        <div class="bar-gk"  style="width:${gkW}%"></div>
-      </div>`;
+      <div class="report-time">${timeLabel}</div>
+      ${barHTML}
+      ${data.gkHalves > 0 ? `<span class="report-gk-badge">GK ×${data.gkHalves}</span>` : ''}`;
     el.appendChild(row);
   });
 }
@@ -650,6 +680,7 @@ function tick() {
     if (state.timer.phase === 'halftime') {
       const gkNum = state.field['gk'];
       if (gkNum !== null) {
+        state.gkFirstHalf = gkNum;
         state.field['gk'] = null;
         if (!state.subs.includes(gkNum)) state.subs.push(gkNum);
       }
@@ -702,6 +733,7 @@ function doReset() {
     state.posTime[num]  = { fw:0, def:0, gk:0 };
   });
   state.score = { us: 0, them: 0 };
+  state.gkFirstHalf = null;
   clearSavedState();
   hideMiniBar();
   renderTimer();
@@ -1282,13 +1314,13 @@ document.getElementById('report-close').addEventListener('click', () => {
 //  PERSISTENCE
 // ─────────────────────────────────────────────
 function saveState() {
-  const { players, field, subs, timer, playTime, posTime, score } = state;
+  const { players, field, subs, timer, playTime, posTime, score, gkFirstHalf } = state;
   const { elapsed, phase, secondHalfActive } = timer;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       players, field, subs,
       timer: { elapsed, phase, secondHalfActive },
-      playTime, posTime, score,
+      playTime, posTime, score, gkFirstHalf,
     }));
   } catch (_) {}
 }
@@ -1307,12 +1339,13 @@ function restoreState() {
 
   if (!saved.players || !saved.players.length) return false;
 
-  state.players  = saved.players;
+  state.players     = saved.players;
   Object.assign(state.field, saved.field || {});
-  state.subs     = saved.subs     || [];
-  state.playTime = saved.playTime || {};
-  state.posTime  = saved.posTime  || {};
-  state.score    = saved.score    || { us: 0, them: 0 };
+  state.subs        = saved.subs        || [];
+  state.playTime    = saved.playTime    || {};
+  state.posTime     = saved.posTime     || {};
+  state.score       = saved.score       || { us: 0, them: 0 };
+  state.gkFirstHalf = saved.gkFirstHalf || null;
 
   const t = saved.timer || {};
   state.timer.elapsed          = t.elapsed          || 0;
@@ -1331,14 +1364,15 @@ if ('serviceWorker' in navigator) {
 }
 
 function showReport(phase) {
-  const maxTime = phase === 'fulltime' ? HALF * 2 : HALF;
-
   document.getElementById('report-title').textContent =
     phase === 'halftime' ? 'HALF TIME' : 'FULL TIME';
 
-  const sorted = [...state.players].sort(
-    (a, b) => (state.playTime[a] || 0) - (state.playTime[b] || 0)
-  );
+  // Sort by field time (fw+def) least → most — surfaces who needs more time
+  const sorted = [...state.players].sort((a, b) => {
+    const posA = state.posTime[a] || { fw:0, def:0, gk:0 };
+    const posB = state.posTime[b] || { fw:0, def:0, gk:0 };
+    return (posA.fw + posA.def) - (posB.fw + posB.def);
+  });
 
   const list = document.getElementById('report-list');
   list.innerHTML = '';

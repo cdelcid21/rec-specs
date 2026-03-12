@@ -859,10 +859,8 @@ html, body {
 }
 .leg-fw::before  { background: #38bdf8; }
 .leg-def::before { background: #a78bfa; }
-.leg-gk::before  { background: #fbbf24; }
 .leg-fw  { color: #38bdf8; }
 .leg-def { color: #a78bfa; }
-.leg-gk  { color: #fbbf24; }
 
 .report-list { flex: 1; overflow-y: auto; }
 
@@ -875,23 +873,14 @@ html, body {
 }
 .report-row:last-child { border-bottom: none; }
 
-.report-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.report-row.fresh    .report-dot { background: #22c55e; }
-.report-row.moderate .report-dot { background: transparent; }
-.report-row.heavy    .report-dot { background: #ef4444; }
-
 .report-name   { font-size: 14px; font-weight: 800; color: var(--white); flex: 1; }
 .report-jersey { font-size: 11px; color: var(--gray); min-width: 28px; text-align: right; }
 .report-time {
   font-size: 12px;
   font-weight: 600;
   color: var(--gray);
-  min-width: 36px;
+  min-width: 64px;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .report-bar-outer {
@@ -904,7 +893,24 @@ html, body {
 }
 .bar-fw  { background: #38bdf8; height: 100%; flex-shrink: 0; }
 .bar-def { background: #a78bfa; height: 100%; flex-shrink: 0; }
-.bar-gk  { background: #fbbf24; height: 100%; flex-shrink: 0; }
+
+.report-gk-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(251,191,36,0.12);
+  border-radius: 5px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.report-gk-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray);
+  line-height: 1;
+  align-self: center;
+}
 
 /* ── Score Row ──────────────────────────── */
 .score-row {
