@@ -70,6 +70,15 @@ function playerName(num) {
   return p ? p.name : `#${num}`;
 }
 
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function hasPlayerPlayTime(num) {
   return season.some(game => game.players.includes(num) && (game.playTime[num] || 0) > 0);
 }
@@ -243,7 +252,7 @@ function showGameDetail(index) {
     const row   = document.createElement('div');
     row.className = 'report-row';
     row.innerHTML = `
-      <div class="report-name">${playerName(n)}</div>
+      <div class="report-name">${escHtml(playerName(n))}</div>
       <div class="report-jersey">#${n}</div>
       <div class="report-time">${fmtPlayTime(total)}</div>
       <div class="report-bar-outer">
@@ -361,7 +370,7 @@ function renderRoster() {
     if (gameMinimized) item.classList.add('locked');
     item.dataset.num = num;
     item.innerHTML = `
-      <span class="roster-name">${name}</span>
+      <span class="roster-name">${escHtml(name)}</span>
       <span class="roster-num">#${num}</span>`;
     rosterList.appendChild(item);
   });
@@ -468,7 +477,7 @@ function renderGameSetup() {
     const isIn = state.players.includes(num);
     item.innerHTML = `
       <button class="roster-check ${isIn ? 'checked' : ''}" data-num="${num}"></button>
-      <span class="roster-name">${name}</span>
+      <span class="roster-name">${escHtml(name)}</span>
       <span class="roster-num">#${num}</span>`;
     gameSetupList.appendChild(item);
   });
@@ -526,7 +535,7 @@ function renderSeasonTab() {
     const row  = document.createElement('div');
     row.className = 'report-row';
     row.innerHTML = `
-      <div class="report-name">${playerName(num)}</div>
+      <div class="report-name">${escHtml(playerName(num))}</div>
       <div class="report-jersey">#${num}</div>
       <div class="report-time">${fmtPlayTime(data.time)}</div>
       <div class="report-bar-outer">
@@ -1334,7 +1343,7 @@ function showReport(phase) {
     row.className = `report-row ${statusClass}`;
     row.innerHTML = `
       <div class="report-dot"></div>
-      <div class="report-name">${playerName(num)}</div>
+      <div class="report-name">${escHtml(playerName(num))}</div>
       <div class="report-jersey">#${num}</div>
       <div class="report-time">${fmtPlayTime(total)}</div>
       <div class="report-bar-outer">
