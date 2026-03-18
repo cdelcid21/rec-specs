@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0a0a">
@@ -53,7 +53,7 @@
 <!-- ══ GAME SETUP SCREEN ══════════════════════ -->
 <div id="game-setup-screen" class="view">
   <div class="setup-header">
-    <button class="btn-back-home" id="btn-back-home-gamesetup"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+    <button class="btn-back-home" id="btn-back-home-gamesetup" aria-label="Back to home"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
     <h1>Who's Here?</h1>
     <p id="game-setup-count">Select players for today</p>
   </div>
@@ -66,7 +66,7 @@
 <!-- ══ STATS SCREEN ═══════════════════════════ -->
 <div id="stats-screen" class="view">
   <div class="setup-header">
-    <button class="btn-back-home" id="btn-back-home-stats" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+    <button class="btn-back-home" id="btn-back-home-stats" style="display:none" aria-label="Back to home"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
     <h1>Season Stats</h1>
   </div>
   <div class="season-stats" id="season-stats"></div>
@@ -79,14 +79,14 @@
     <div class="sheet-handle"></div>
     <div class="timer-top">
       <div class="half-badge" id="half-badge"></div>
-      <button class="btn-back-setup" id="btn-back-setup"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+      <button class="btn-back-setup" id="btn-back-setup" aria-label="Back to game setup"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
       <div class="timer-display" id="timer-display">00:00</div>
-      <button class="btn-ctrl-draw" id="btn-draw"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg></button>
+      <button class="btn-ctrl-draw" id="btn-draw" aria-label="Toggle draw mode"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg></button>
     </div>
     <div class="timer-controls">
-      <button class="btn-ctrl-skip" id="btn-skip-back" disabled>−30s</button>
+      <button class="btn-ctrl-skip" id="btn-skip-back" aria-label="Skip back 30 seconds" disabled>−30s</button>
       <button class="btn-ctrl-play" id="btn-action"></button>
-      <button class="btn-ctrl-skip" id="btn-skip-fwd" disabled>+30s</button>
+      <button class="btn-ctrl-skip" id="btn-skip-fwd" aria-label="Skip forward 30 seconds" disabled>+30s</button>
     </div>
     <div class="score-row">
       <button class="score-side" id="btn-score-us">
@@ -199,7 +199,7 @@
 <!-- ══ DRILLS SCREEN ══════════════════════════ -->
 <div id="drills-screen" class="view">
   <div class="drills-header">
-    <button class="btn-back-home" id="btn-back-home-drills" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+    <button class="btn-back-home" id="btn-back-home-drills" style="display:none" aria-label="Back to home"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
     <h1>Practice</h1>
   </div>
   <div class="drills-coming-soon">

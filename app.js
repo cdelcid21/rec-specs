@@ -26,6 +26,13 @@ const STORAGE_KEY        = 'rec-specs-state'; // localStorage key for session pe
 const ROSTER_KEY         = 'rec-specs-roster';
 const SEASON_KEY         = 'rec-specs-season';
 
+function safeGet(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; }
+}
+function safeSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
+}
+
 // ── Icon SVGs (Heroicons outline) ──────────────
 const SVG_PLAY  = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 0 1 0 1.971l-11.54 6.347a1.125 1.125 0 0 1-1.667-.985V5.653Z"/></svg>`;
 const SVG_PAUSE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>`;
@@ -35,20 +42,16 @@ let roster = []; // persistent player list: [{ num, name }]
 let season = [];
 
 function saveRoster() {
-  try { localStorage.setItem(ROSTER_KEY, JSON.stringify(roster)); } catch (_) {}
+  safeSet(ROSTER_KEY, roster);
 }
 function loadRoster() {
-  try {
-    const raw = localStorage.getItem(ROSTER_KEY);
-    if (raw) roster = JSON.parse(raw);
-  } catch (_) {}
+  const saved = safeGet(ROSTER_KEY);
+  if (saved) roster = saved;
 }
 
 function loadSeason() {
-  try {
-    const raw = localStorage.getItem(SEASON_KEY);
-    if (raw) season = JSON.parse(raw);
-  } catch (_) {}
+  const saved = safeGet(SEASON_KEY);
+  if (saved) season = saved;
 }
 
 function saveSeasonGame() {
@@ -63,7 +66,7 @@ function saveSeasonGame() {
     date:  Date.now(),
   });
   state.gkFirstHalf = null;
-  try { localStorage.setItem(SEASON_KEY, JSON.stringify(season)); } catch (_) {}
+  safeSet(SEASON_KEY, season);
 }
 
 // Return display name for a jersey number (falls back to #num if not on roster)
@@ -253,6 +256,7 @@ function showGameDetail(index) {
     const pos       = game.posTime[n] || { fw:0, def:0, gk:0 };
     const fieldTime = pos.fw + pos.def;
 
+    const gkCount = (game.gkHalves || []).filter(k => k === n).length;
     let barHTML;
     if (fieldTime > 0) {
       const fwW  = (pos.fw  / fieldTime * 100).toFixed(1);
@@ -264,8 +268,6 @@ function showGameDetail(index) {
     } else {
       barHTML = `<div class="report-bar-outer"><span class="report-gk-label">GK</span></div>`;
     }
-
-    const gkCount = (game.gkHalves || []).filter(k => k === n).length;
     const row = document.createElement('div');
     row.className = 'report-row';
     row.innerHTML = `
@@ -619,19 +621,23 @@ function renderTimer() {
     case 'idle':
       timerDisplay.textContent = '00:00';
       btnAction.innerHTML = SVG_PLAY;
+      btnAction.setAttribute('aria-label', 'Start game');
       break;
     case 'running':
       timerDisplay.textContent = fmt(elapsed);
       btnAction.innerHTML = SVG_PAUSE;
+      btnAction.setAttribute('aria-label', 'Pause game');
       break;
     case 'paused':
       timerDisplay.textContent = fmt(elapsed);
       btnAction.innerHTML = SVG_PLAY;
+      btnAction.setAttribute('aria-label', 'Resume game');
       break;
     case 'halftime':
       timerDisplay.classList.add('alert', 'small-label');
       timerDisplay.textContent = 'HALF';
       btnAction.textContent = '2H';
+      btnAction.setAttribute('aria-label', 'Start second half');
       break;
     case 'fulltime':
       timerDisplay.classList.add('alert', 'small-label');
@@ -1042,7 +1048,7 @@ confirmYes.addEventListener('click', () => {
       ...game,
       players: game.players.filter(n => n !== num),
     }));
-    try { localStorage.setItem(SEASON_KEY, JSON.stringify(season)); } catch (_) {}
+    safeSet(SEASON_KEY, season);
     saveRoster();
     updateHomeScreen();
     renderRoster();
@@ -1316,13 +1322,12 @@ document.getElementById('report-close').addEventListener('click', () => {
 function saveState() {
   const { players, field, subs, timer, playTime, posTime, score, gkFirstHalf } = state;
   const { elapsed, phase, secondHalfActive } = timer;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      players, field, subs,
-      timer: { elapsed, phase, secondHalfActive },
-      playTime, posTime, score, gkFirstHalf,
-    }));
-  } catch (_) {}
+  safeSet(STORAGE_KEY, {
+    version: 1,
+    players, field, subs,
+    timer: { elapsed, phase, secondHalfActive },
+    playTime, posTime, score, gkFirstHalf,
+  });
 }
 
 function clearSavedState() {
@@ -1330,14 +1335,12 @@ function clearSavedState() {
 }
 
 function restoreState() {
-  let saved;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    saved = JSON.parse(raw);
-  } catch (_) { return false; }
+  const saved = safeGet(STORAGE_KEY);
+  if (!saved || !saved.players || !saved.players.length) return false;
 
-  if (!saved.players || !saved.players.length) return false;
+  // Migration hook — extend here as the schema evolves
+  // const v = saved.version || 0;
+  // if (v < 1) { /* backfill missing fields */ }
 
   state.players     = saved.players;
   Object.assign(state.field, saved.field || {});
