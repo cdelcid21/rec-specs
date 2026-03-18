@@ -1,79 +1,22 @@
-// ─────────────────────────────────────────────
-//  STATE
-// ─────────────────────────────────────────────
-const ZONES = ['fw1','fw2','fw3','def1','def2','def3','gk'];
-const HALF  = 20 * 60; // 1200 seconds
-
-// Default zone positions (% of field width/height) — used to seed draw-tokens
-const ZONE_POS = {
-  fw1:  {x:20, y:59}, fw2:  {x:50, y:56}, fw3:  {x:80, y:59},
-  def1: {x:20, y:74}, def2: {x:50, y:71}, def3: {x:80, y:74},
-  gk:   {x:50, y:88},
-};
-
-// ── Tunable constants ─────────────────────────
-const PEEK_DELAY_MS      = 400;   // hold duration (ms) before play-time peek activates
-const PEEK_CANCEL_PX     = 10;    // finger movement (px) that cancels a pending peek
-const RESET_HOLD_MS      = 600;   // hold duration (ms) on skip-back button to trigger full reset
-const SKIP_DELTA_SECS    = 30;    // seconds added/subtracted by skip forward/back buttons
-const REPORT_DELAY_MS    = 350;   // delay (ms) before the halftime/fulltime report appears
-const MAX_SUB_OUT_HINTS  = 3;     // max number of "sub out" hints shown during peek mode
-const HEAVY_PLAY_RATIO   = 0.70;  // play-time fraction at or above which a player is "heavy"
-const MODERATE_PLAY_RATIO= 0.40;  // play-time fraction at or above which a player is "moderate"
-const FREE_DRAG_MIN_PCT  = 3;     // lower clamp (%) for free-drag token position in draw mode
-const FREE_DRAG_MAX_PCT  = 97;    // upper clamp (%) for free-drag token position in draw mode
-const STORAGE_KEY        = 'rec-specs-state'; // localStorage key for session persistence
-const ROSTER_KEY         = 'rec-specs-roster';
-const SEASON_KEY         = 'rec-specs-season';
-
-function safeGet(key) {
-  try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; }
-}
-function safeSet(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
-}
+import {
+  ZONES, HALF, ZONE_POS,
+  PEEK_DELAY_MS, PEEK_CANCEL_PX, RESET_HOLD_MS, SKIP_DELTA_SECS,
+  REPORT_DELAY_MS, MAX_SUB_OUT_HINTS, HEAVY_PLAY_RATIO, MODERATE_PLAY_RATIO,
+  FREE_DRAG_MIN_PCT, FREE_DRAG_MAX_PCT,
+  state, clearField,
+} from './state.js';
+import {
+  roster, season,
+  saveRoster, loadRoster, loadSeason, saveSeasonGame,
+  saveState, clearSavedState, restoreState,
+  removeFromRoster, removePlayerFromSeason,
+  playerName, hasPlayerPlayTime,
+} from './persistence.js';
 
 // ── Icon SVGs (Heroicons outline) ──────────────
 const SVG_PLAY  = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 0 1 0 1.971l-11.54 6.347a1.125 1.125 0 0 1-1.667-.985V5.653Z"/></svg>`;
 const SVG_PAUSE = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>`;
 const SVG_XMARK = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>`;
-
-let roster = []; // persistent player list: [{ num, name }]
-let season = [];
-
-function saveRoster() {
-  safeSet(ROSTER_KEY, roster);
-}
-function loadRoster() {
-  const saved = safeGet(ROSTER_KEY);
-  if (saved) roster = saved;
-}
-
-function loadSeason() {
-  const saved = safeGet(SEASON_KEY);
-  if (saved) season = saved;
-}
-
-function saveSeasonGame() {
-  season.push({
-    players:  [...state.players],
-    playTime: { ...state.playTime },
-    posTime:  Object.fromEntries(
-      state.players.map(n => [n, { ...(state.posTime[n] || { fw:0, def:0, gk:0 }) }])
-    ),
-    gkHalves: [state.gkFirstHalf, state.field['gk']].filter(Boolean),
-    score: { ...state.score },
-    date:  Date.now(),
-  });
-  state.gkFirstHalf = null;
-  safeSet(SEASON_KEY, season);
-}
-
-// Return display name for a jersey number (falls back to #num if not on roster)
-function playerName(num) {
-  const p = roster.find(p => p.num === num);
-  return p ? p.name : `#${num}`;
-}
 
 function escHtml(str) {
   return String(str)
@@ -83,28 +26,6 @@ function escHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
-function hasPlayerPlayTime(num) {
-  return season.some(game => game.players.includes(num) && (game.playTime[num] || 0) > 0);
-}
-
-const state = {
-  players: [],
-  field:   { fw1:null, fw2:null, fw3:null, def1:null, def2:null, def3:null, gk:null },
-  subs:    [],
-  timer: {
-    elapsed:          0,
-    phase:            'idle', // idle | running | paused | halftime | fulltime
-    interval:         null,
-    secondHalfActive: false,
-  },
-  drawMode: false,
-  wakeLock: null,
-  playTime: {}, // { jerseyNum: seconds } — cumulative on-field time per player
-  posTime:  {}, // { jerseyNum: { fw:0, def:0, gk:0 } } — time by position group
-  score:    { us: 0, them: 0 },
-  gkFirstHalf: null, // jersey num of the 1H GK; set at halftime before auto-bench
-};
 
 // ─────────────────────────────────────────────
 //  NAVIGATION
@@ -353,7 +274,7 @@ document.getElementById('btn-fab').addEventListener('click', () => {
   if (active && active.id === 'roster-screen') {
     openPlayerModal('add');
   } else {
-    state.players = roster.map(p => p.num);
+    state.players = new Set(roster.map(p => p.num));
     showScreen('game-setup-screen');
     renderGameSetup();
   }
@@ -456,8 +377,10 @@ document.getElementById('player-modal-save').addEventListener('click', () => {
     if (num !== playerModalEditNum && roster.some(p => p.num === num)) return;
     const p = roster.find(p => p.num === playerModalEditNum);
     if (p) {
-      const idx = state.players.indexOf(playerModalEditNum);
-      if (idx !== -1) state.players[idx] = num;
+      if (state.players.has(playerModalEditNum)) {
+        // Rebuild Set to swap the old number for the new one, preserving order
+        state.players = new Set([...state.players].map(n => n === playerModalEditNum ? num : n));
+      }
       p.name = name;
       p.num  = num;
     }
@@ -490,7 +413,7 @@ function renderGameSetup() {
   roster.forEach(({ num, name }) => {
     const item = document.createElement('div');
     item.className = 'roster-item';
-    const isIn = state.players.includes(num);
+    const isIn = state.players.has(num);
     item.innerHTML = `
       <button class="roster-check ${isIn ? 'checked' : ''}" data-num="${num}"></button>
       <span class="roster-name">${escHtml(name)}</span>
@@ -501,16 +424,16 @@ function renderGameSetup() {
   gameSetupList.querySelectorAll('.roster-check').forEach(btn => {
     btn.addEventListener('click', () => {
       const num = btn.dataset.num;
-      if (state.players.includes(num)) {
-        state.players = state.players.filter(p => p !== num);
+      if (state.players.has(num)) {
+        state.players.delete(num);
       } else {
-        state.players.push(num);
+        state.players.add(num);
       }
       renderGameSetup();
     });
   });
 
-  const n = state.players.length;
+  const n = state.players.size;
   gameSetupCount.textContent = n === 0
     ? 'Select players for today'
     : `${n} of ${roster.length} player${roster.length !== 1 ? 's' : ''} selected`;
@@ -581,7 +504,7 @@ function renderSeasonTab() {
 
 btnStartGame.addEventListener('click', () => {
   state.subs = [...state.players];
-  ZONES.forEach(z => state.field[z] = null);
+  clearField();
   state.playTime = {};
   state.posTime  = {};
   state.score    = { us: 0, them: 0 };
@@ -1042,13 +965,9 @@ confirmYes.addEventListener('click', () => {
   if (pendingDelete) {
     const num = pendingDelete;
     pendingDelete = null;
-    roster = roster.filter(p => p.num !== num);
-    state.players = state.players.filter(p => p !== num);
-    season = season.map(game => ({
-      ...game,
-      players: game.players.filter(n => n !== num),
-    }));
-    safeSet(SEASON_KEY, season);
+    removeFromRoster(num);
+    state.players.delete(num);
+    removePlayerFromSeason(num);
     saveRoster();
     updateHomeScreen();
     renderRoster();
@@ -1110,6 +1029,7 @@ function getCanvasCoords(touch) {
 function enterDrawMode() {
   state.drawMode = true;
   resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
   drawCanvas.style.display = 'block';
   gameScreen.classList.add('draw-mode-active');
   btnDraw.classList.add('active');
@@ -1132,6 +1052,7 @@ function enterDrawMode() {
 
 function exitDrawMode() {
   state.drawMode = false;
+  window.removeEventListener('resize', resizeCanvas);
   clearCanvas();
   drawCanvas.style.display = 'none';
   gameScreen.classList.remove('draw-mode-active');
@@ -1315,49 +1236,6 @@ document.getElementById('report-close').addEventListener('click', () => {
     goBackToHome();
   }
 });
-
-// ─────────────────────────────────────────────
-//  PERSISTENCE
-// ─────────────────────────────────────────────
-function saveState() {
-  const { players, field, subs, timer, playTime, posTime, score, gkFirstHalf } = state;
-  const { elapsed, phase, secondHalfActive } = timer;
-  safeSet(STORAGE_KEY, {
-    version: 1,
-    players, field, subs,
-    timer: { elapsed, phase, secondHalfActive },
-    playTime, posTime, score, gkFirstHalf,
-  });
-}
-
-function clearSavedState() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
-}
-
-function restoreState() {
-  const saved = safeGet(STORAGE_KEY);
-  if (!saved || !saved.players || !saved.players.length) return false;
-
-  // Migration hook — extend here as the schema evolves
-  // const v = saved.version || 0;
-  // if (v < 1) { /* backfill missing fields */ }
-
-  state.players     = saved.players;
-  Object.assign(state.field, saved.field || {});
-  state.subs        = saved.subs        || [];
-  state.playTime    = saved.playTime    || {};
-  state.posTime     = saved.posTime     || {};
-  state.score       = saved.score       || { us: 0, them: 0 };
-  state.gkFirstHalf = saved.gkFirstHalf || null;
-
-  const t = saved.timer || {};
-  state.timer.elapsed          = t.elapsed          || 0;
-  state.timer.secondHalfActive = t.secondHalfActive || false;
-  // If the timer was running when the page closed, restore as paused
-  state.timer.phase = t.phase === 'running' ? 'paused' : (t.phase || 'idle');
-
-  return true;
-}
 
 // ─────────────────────────────────────────────
 //  SERVICE WORKER
